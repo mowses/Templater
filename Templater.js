@@ -227,7 +227,7 @@
                 "var e;" +
 
                 // Introduce the data as local variables using with(){}
-                "with(obj){e = " + expression + ";}return e;");
+                "with(obj){(function(){'use strict';e = " + expression + ";})();}return e;");
 
             return fn;
         }
