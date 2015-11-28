@@ -11,17 +11,22 @@
             subviews = {
                 repeatable: {}
             },
-            model;
+            arbitrary_data;
 
         self.element = $(template).clone();
-        self.parse = parse;
+        self.model = new ObserverCore();
         self.destroy = destroy;
+        self.subviews = subviews;
         init();
 
         // functions
         function init() {
 
-            model = new ObserverCore();
+            arbitrary_data = new ObserverCore();
+
+            self.model.watch(null, function(data) {
+                parse(data.new);
+            });
 
             self.events = new Events([
                 'before parse',
@@ -58,10 +63,7 @@
                     var view = new Templater(repeatable.$elClone);
 
                     // store the view
-                    subview[added_item.index] = {
-                        view: view,
-                        data: {}
-                    };
+                    subview[added_item.index] = view;
                     fragment.appendChild(view.element[0]);
                 });
 
@@ -76,13 +78,12 @@
                     subview = subviews.repeatable[data.repeatable];
 
                 $.each(result, function(i, changed_item) {
-                    // get the view
-                    subview[i].data = {
+                    subview[i].model.setData({
                         $index: i,
                         $value: changed_item,
                         $length: length,
                         $result: result
-                    };
+                    });
                 });
             });
 
@@ -114,7 +115,7 @@
                 };
                 subviews.repeatable[i] = {};
 
-                model
+                arbitrary_data
                     .watch('delete:repeatable[' + i + ']', function(data) {
                         return self.events.trigger('deleted repeatable item', {
                             repeatable: i,
@@ -222,16 +223,6 @@
             });
         }
 
-        function prepareExpression(expression) {
-            var fn = new Function("obj",
-                "var e;" +
-
-                // Introduce the data as local variables using with(){}
-                "with(obj){(function(){'use strict';e = " + expression + ";})();}return e;");
-
-            return fn;
-        }
-
         function parse(data) {
 
             self.events.trigger('before parse');
@@ -257,15 +248,15 @@
             // parse repeats
             $.each(watches.repeatable, function(i, item) {
                 var result = item.runExpression(data);
-                model.setData('repeatable["' + i + '"]', result);
+                arbitrary_data.setData('repeatable["' + i + '"]', result);
             });
-            model.apply();
+            arbitrary_data.apply();
 
             // update repeatable subviews
             $.each(subviews.repeatable, function(i, subviews) {
                 $.each(subviews, function(j, subview) {
-                    subview.data.__proto__ = data; // update "proto" property
-                    subview.view.parse(subview.data);
+                    // update "proto" property
+                    subview.model.setData('__proto__', data);
                 });
             });
         }
@@ -273,6 +264,15 @@
         function destroy() {
             self.element.remove();
         }
+    }
+
+    function prepareExpression(expression) {
+        var fn = new Function("obj",
+            "var e;" +
+            // Introduce the data as local variables using with(){}
+            "with(obj){(function(){'use strict';e = " + expression + ";})();}return e;");
+
+        return fn;
     }
 
     // Node: Export function
