@@ -1,0 +1,88 @@
+<html>
+    <head>
+        <title>Templater</title>
+        <style>
+            just-a-tag {
+                background: #E77CEB;
+                display: block;
+                padding: 10px;
+            }
+
+            [repeat] {
+                background: #7C89EB;
+                display: block;
+                padding: 10px;
+                border: 1px solid #5962A8;
+                margin: 10px 0px 10px 0px;
+            }
+
+            button {
+                background: #82D4E0;
+                padding: 10px;
+                border: 1px solid #599EA8;
+                margin: 10px 0px 10px 0px;
+            }
+        </style>
+        <script src="./jquery-3.1.0.slim.js"></script>
+        <script src="./templater.js"></script>
+        <script type="text/html" id="template1">
+
+
+
+<div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
+    <h2>REPEAT AREAS</h2>
+    <div repeat="var i in [6,3]">
+        
+        <div repeat="var x in [22,44]">inside another repeater {{x}} - {{i}}</div>
+    </div>
+
+    <button repeatable = "var i in ['a', 'b', 'c', 'd', 'e']">A button {{i}}</button>
+</div>
+
+
+
+
+        </script>
+        <script>
+            $(function() {
+                var html = $('#template1').html();
+                var template = new Templater();
+                /*template.registerDirective({
+                    selector: 'just-a-tag,'
+                });*/
+                template.setHtml(html);
+                console.log('===========', template);
+                $('#rendered_template').html('').prepend(template.render());
+            });
+        </script>
+    </head>
+    <body>
+        <div id="rendered_template" style="border:1px solid red; position: absolute; top: 0px; left: 0px; width: 50%;"></div>
+        
+        <div style="border:1px solid red; position: absolute; top: 0px; right: 0px;width: 50%;">
+            <h1>Template test #1</h1>
+            <div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
+                <ul>
+                    <li>desenvolvendo templating system</li>
+                    <li>este da parse usando <b>Expressões regulares</b></li>
+                </ul>
+
+                <just-a-tag>JUST-A-TAG #1</just-a-tag>
+                some text here
+                <just-a-tag id="foolish">JUST-A-TAG #2</just-a-tag>
+            </div>
+
+            <div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
+                <h2>REPEAT AREAS</h2>
+                <div repeat="var i in [6,3]">
+                    Repeating: {{i}}
+                    <br>
+                    another repeater:
+                    <div repeat="var x in [22,44]">inside another repeater {{x}} - {{i}}</div>
+                </div>
+
+                <button repeatable = "var i in ['a', 'b', 'c', 'd', 'e']">A button {{i}}</button>
+            </div>
+        </div>
+    </body>
+</html>

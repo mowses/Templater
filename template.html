@@ -1,0 +1,22 @@
+<h1>Template test #1</h1>
+<ul>
+    <li>desenvolvendo templating system</li>
+    <li>este da parse usando <b>Expressões regulares</b></li>
+</ul>
+
+
+<just-a-tag>JUST-A-TAG #1</just-a-tag>
+some text here
+<just-a-tag id="foolish">JUST-A-TAG #2</just-a-tag>
+
+<h2>REPEAT AREAS</h2>
+<div repeat="var i in [6,3]">
+    Repeating: {{i}}
+    <br>
+    another repeater:
+    <div repeat="var x in [22,44]">inside another repeater {{x}} - {{i}}</div>
+</div>
+
+<a href="#" class="{{aclass}}">A LINK HERE: {{aclass}}</a>
+
+<button repeatable = "var i in ['a', 'b', 'c', 'd', 'e']">A button {{i}}</button>
