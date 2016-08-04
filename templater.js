@@ -10,20 +10,28 @@
 		regexDirectives: function(registered) {
 			var ret = [];
 			var selectors = Templater.parseSelector(registered);
-			var regex;
+			var regex_greedy;
+			var regex_lazy;
 			var m;
 			
+			// IMPORTANT: all regex were replaced its lazy by greedy method
+			// meaning that will match the farwest closing tag (the last one)
+			// making it on purpose since regex cant identify inner opening and closing tags inside the main match
+			// at least I dont know how to do it
+			// lazy regexes have an "?" at the most end of capturing group
 			if (selectors.tag && selectors.attribute) {
-				regex = new RegExp('<(' + selectors.tag + ')[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
+				regex_greedy = new RegExp('<(' + selectors.tag + ')[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
+				regex_lazy = new RegExp('<(' + selectors.tag + ')[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else if (!selectors.tag && selectors.attribute) {
-				regex = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
-				console.log(regex);
+				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
+				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+(' + selectors.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else if (selectors.tag && !selectors.attribute) {
-				regex = new RegExp('<(' + selectors.tag + '+)(())[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
+				regex_greedy = new RegExp('<(' + selectors.tag + '+)(())[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
+				regex_lazy = new RegExp('<(' + selectors.tag + '+)(())[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else {
 				return ret;
 			}
-			
+
 			// check if have directive already in this template
 			// but we should always verify for directives, even if this template have already this directive
 			// because we should look for children directives too
@@ -33,14 +41,49 @@
 			var html = has_directive ? this.html.substr(1) : this.html;
 			
 			do {
-				m = regex.exec(html);
+				m = regex_greedy.exec(html);
 				if (!m) break;
+				//console.log(m[0]);
 				
+				m = Templater.fixGreedyRegex(m, regex_lazy);
+
 				ret.push(m);
 
 			} while (m);
 
 			return ret;
+		},
+
+		fixGreedyRegex: function(m, regex_lazy) {
+			// now, lets do some experimental workaround to fix regex greedy. for a description take a look the the first commit of this project at git
+			var fix_greedy_regex = new RegExp('<' + m[1] + '\\b[^>]*>(?:(?=([^<]+))\\1|<(?!' + m[1] + '\\b[^>]*>))*?<\\/' + m[1] + '>', 'gi');
+			var _html = m[0].substr(1);
+			var _replaced = [];
+			var m2;
+			
+			do {
+				m2 = fix_greedy_regex.exec(_html);
+				if (!m2) break;
+
+				_html = _html.replace(m2[0], '::TEMPLATER-REPLACED_TEXT::' + _replaced.length + '::');
+				_replaced.push(m2[0]);
+
+			} while (m2);
+
+			_html = '<' + _html;
+			m2 = regex_lazy.exec(_html);
+
+			if (!m2) return m;
+			
+			// restore html content from replacement
+			$.each(_replaced, function(i, value) {
+				$.each(m, function(j) {
+					let txt = '::TEMPLATER-REPLACED_TEXT::' + i + '::';
+					m2[j] = m2[j].replace(txt, value);
+				});
+			});
+
+			return m2;
 		},
 
 		parseSelector: function(selector) {
@@ -124,14 +167,10 @@
 
 			self.walkRecursively(function(curr_instance, parent, children, children_index) {
 				var el_html = curr_instance.html;
-				console.log('================');
 				$.each(children, function(i, child) {
-					console.log(child.html);
 					el_html = el_html.replace(child.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
 				});
-				console.log(el_html);
-				console.log('+++++++++++++++');
-
+				
 				curr_instance.elementHtml = el_html;
 				curr_instance.$element = $('<div>' + curr_instance.elementHtml + '</div>');
 				curr_instance.placeholders = [];
