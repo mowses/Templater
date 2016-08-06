@@ -15,15 +15,16 @@
 
 	function Templater() {
 		this.__internal__ = {
-			registered_directives: $.merge([], Templater.Config.buildInDirectives)
+			registered_directives: $.merge([], Templater.Config.buildInDirectives),
+			parent: undefined
 		}
-		this.html;
-		this.data = {};
+		//this.data = {};
 		this.$element;
 		this.elementHtml;
-		this.subtemplates = {};
-		this.directives = [];
-		this.placeholders = [];
+		this.subtemplates;
+		this.html;
+		this.directives;
+		//this.placeholders = [];
 	}
 
 	$.extend(Templater.prototype, {
@@ -34,6 +35,12 @@
 		setHtml: function(html) {
 			this.html = html;
 			parseTemplate.apply(this, []);
+		},
+
+		setParent: function(parent) {
+			if (!(parent instanceof Templater)) return;
+			this.__internal__.parent = parent;
+			this.__internal__.registered_directives = parent.__internal__.registered_directives;
 		},
 
 		render: function() {
@@ -72,20 +79,15 @@
 			var self = this;
 
 			this.walkRecursively(function(curr_instance, parent, children, children_index) {
-				$.each(curr_instance.directives, function(i, directive) {
+				/*$.each(curr_instance.directives, function(i, directive) {
 					//console.log(i, directive);
-				});
+				});*/
 			});
 		},
 
 		walkRecursively: function(fn, parent, children_index) {
 			var self = this;
-			var children = [];
-			$.each(this.subtemplates, function(i, subtemplate) {
-				$.each(subtemplate, function(j, sub_instance) {
-					children.push(sub_instance);
-				});
-			});
+			var children = this.subtemplates;
 
 			fn(self, parent, children, children_index);
 			$.each(children, function(i, child) {
@@ -94,12 +96,42 @@
 		}
 	});
 
-	// protect this functions to not be in the Templater API
+	// protect the belolw functions to not to be in the Templater API
 	// making these non user callable
+	
 	function parseTemplate() {
 		var self = this;
-		var template_directives = getTemplateDirectives(this.html, this.__internal__.registered_directives);
-		console.log(template_directives);
+		var parent = this.__internal__.parent;
+		var html = parent ? this.html.substr(1) : this.html;
+		
+		// since we removed the first char from html, the function getTemplateDirectives
+		// wont return the first element directives
+		// its desired otherwise it will create infinite loop for the same element
+		var template_directives = getTemplateDirectives(html, this.__internal__.registered_directives);
+		
+		// the result array could repeat the same element depending on how many directives
+		// this element has. Lets change the result grouping the elements in a matrix
+		var resulting_matrix = groupBy(template_directives, function(item) {
+			return [item.html];
+		});
+
+		this.subtemplates = [];
+		
+		$.each(resulting_matrix, function(i, matches) {
+			let html = matches[0].html;
+			let template = new Templater();
+
+			// dont need matches html anymore
+			$.each(matches, function(i, match) {
+				delete match.html;
+			});
+
+			template.directives = matches;
+			template.setParent(self);
+
+			self.subtemplates.push(template);
+			template.setHtml(html);
+		});
 	}
 
 	/**
@@ -138,6 +170,19 @@
 		});
 
 		return outer_found;
+	}
+
+	function groupBy(array, f) {
+		var groups = {};
+		array.forEach(function(o) {
+			var group = JSON.stringify(f(o));
+			groups[group] = groups[group] || [];
+			groups[group].push(o);  
+		});
+
+		return Object.keys(groups).map(function(group) {
+			return groups[group]; 
+		})
 	}
 
 	/*function __translateRegisteredDirectives() {

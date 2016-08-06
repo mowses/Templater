@@ -12,12 +12,21 @@
 
 <div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
     <h2>REPEAT AREAS</h2>
-    <div repeat="var i in [6,3]">
+    <div repeats="var i in [6,3]">
         Repeating: {{i}}
         <br>
         another repeater:
-        <div repeat="var x in [22,44]">inside another repeater {{x}} - {{i}}</div>
+        <div repeat="var x in [22,44]" repeattt="lorem" meca="merda">inside another repeater {{x}} - {{i}}</div>
     </div>
 
-    <button repeatable = "var i in ['a', 'b', 'c', 'd', 'e']">A button {{i}}</button>
+    <button repeat = "var i in [a, b, c, d, e]">A button {{i}}
+        <div repeat="dentro de outro repea">
+            cocoroni
+        </div>
+        <div meca="dentro de rapeet"></div>
+    </button>
+
+    <button repeat="another repeat">outside repeat</button>
+    xx
+    
 </div>
