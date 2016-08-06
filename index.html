@@ -65,22 +65,23 @@
 </div>
 
 
-
         </script>
         <script>
             $(function() {
                 var html = $('#template1').html();
                 var template = new Templater();
                 /*template.registerDirective({
-                    selector: 'just-a-tag,'
+                    selector: '[meca]',
+                    'class': TemplaterRepeatDirective
                 });*/
                 template.setHtml(html);
                 console.log('========================================');
                 console.log(template);
                 console.log('========================================');
+                template.setData({
+                    foo: 'the world is mine'
+                });
                 $('#rendered_template').html('').prepend(template.render());
-
-                template.initialize();
             });
         </script>
     </head>

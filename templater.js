@@ -15,11 +15,11 @@
 			registered_directives: $.merge([], Templater.Config.buildInDirectives),
 			parent: undefined
 		}
-		//this.data = {};
-		this.$element;
-		this.elementHtml;
+		this.data = {};
 		this.subtemplates;
 		this.html;
+		this.elementHtml;
+		this.$element;
 		this.directives;
 		this.placeholders;
 	}
@@ -27,6 +27,20 @@
 	$.extend(Templater.prototype, {
 		registerDirective: function(directive) {
 			this.__internal__.registered_directives.push(directive);
+		},
+
+		setData: function(data) {
+			var self = this;
+			var parent = this.__internal__.parent;
+			this.data = data;
+
+			if (parent) {
+				this.data.__proto__ = parent.data;
+			}
+
+			$.each(this.subtemplates, function(i, subtemplate) {
+				subtemplate.data.__proto__ = self.data;
+			});
 		},
 
 		setHtml: function(html) {
@@ -38,30 +52,58 @@
 			if (!(parent instanceof Templater)) return;
 			this.__internal__.parent = parent;
 			this.__internal__.registered_directives = parent.__internal__.registered_directives;
+			this.data.__proto__ = parent.data;
 		},
 
 		render: function() {
 			var self = this;
+			var html = this.html;
+
+			// replace children templates html by html placeholders
+			$.each(this.subtemplates, function(i, instance) {
+				html = html.replace(instance.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
+			});
+
+			this.elementHtml = html;
+			this.$element = $(this.elementHtml);  // add a container because it wont insert text outside an element
+			this.placeholders = [];
+
+			// add to current instance its children placeholders jquery element (not the view element yet)
+			$.each(this.subtemplates, function(i, instance) {
+				let selector = 'templater-placeholder#children-' + i;
+				let placeholder = self.$element.find(selector);
+				placeholder = placeholder.length ? placeholder : self.$element.filter(selector);
+				self.placeholders.push(placeholder);
+			});
+
+			initializeDirectives.apply(this, []);
+			
+			// render subtemplates and insert into placeholder
+			$.each(this.subtemplates, function(i, instance) {
+				self.placeholders[i].append(instance.render());
+			});
+
+			return this.$element;
 
 			self.walkRecursively(function(curr_instance, parent, children, children_index) {
 				// replace children templates html by html placeholders
-				var el_html = curr_instance.html;
+				/*var el_html = curr_instance.html;
 				$.each(children, function(i, child) {
 					el_html = el_html.replace(child.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
 				});
 				
 				// initialize current instance vars
-				curr_instance.elementHtml = el_html;
-				curr_instance.$element = $(curr_instance.elementHtml);
-				curr_instance.placeholders = [];
+				curr_instance.elementHtml = el_html;*/
+				/*curr_instance.$element = $(curr_instance.elementHtml);*/
+				//curr_instance.placeholders = [];
 
 				// add to current instance its children placeholders jquery element (not in the view yet)
-				$.each(children, function(i, child) {
+				/*$.each(children, function(i, child) {
 					let selector = 'templater-placeholder#children-' + i;
 					let placeholder = curr_instance.$element.find(selector);
 					placeholder = placeholder.length ? placeholder : curr_instance.$element.filter(selector);
 					curr_instance.placeholders.push(placeholder);
-				});
+				});*/
 
 				// insert subtemplates into parent
 				if (parent) {
@@ -70,16 +112,6 @@
 			});
 
 			return self.$element;
-		},
-
-		initialize: function() {
-			var self = this;
-
-			this.walkRecursively(function(curr_instance, parent, children, children_index) {
-				$.each(curr_instance.directives, function(i, item) {
-					console.log(i, item);
-				});
-			});
 		},
 
 		walkRecursively: function(fn, parent, children_index) {
@@ -167,6 +199,14 @@
 		});
 
 		return outer_found;
+	}
+
+	function initializeDirectives() {
+		var self = this;
+
+		$.each(this.directives, function(i, item) {
+			item.instance = new item.directive.class(self, item);
+		});
 	}
 
 	function groupBy(array, f) {
