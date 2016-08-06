@@ -24,7 +24,7 @@
 		this.subtemplates;
 		this.html;
 		this.directives;
-		//this.placeholders = [];
+		this.placeholders;
 	}
 
 	$.extend(Templater.prototype, {
@@ -44,7 +44,6 @@
 		},
 
 		render: function() {
-			return;
 			var self = this;
 
 			self.walkRecursively(function(curr_instance, parent, children, children_index) {
@@ -56,13 +55,14 @@
 				
 				// initialize current instance vars
 				curr_instance.elementHtml = el_html;
-				curr_instance.$element = $('<div>' + curr_instance.elementHtml + '</div>');
+				curr_instance.$element = $(curr_instance.elementHtml);
 				curr_instance.placeholders = [];
 
 				// add to current instance its children placeholders jquery element (not in the view yet)
 				$.each(children, function(i, child) {
 					let selector = 'templater-placeholder#children-' + i;
 					let placeholder = curr_instance.$element.find(selector);
+					placeholder = placeholder.length ? placeholder : curr_instance.$element.filter(selector);
 					curr_instance.placeholders.push(placeholder);
 				});
 
@@ -184,52 +184,6 @@
 			return groups[group]; 
 		})
 	}
-
-	/*function __translateRegisteredDirectives() {
-		var self = this;
-		var d = {};
-
-		$.each(this.__internal__.registered_directives, function(i, registered) {
-			$.each(registered.selector.split(','), function(j, selector) {
-				d[selector] = {
-					registered: registered,
-					matches: []
-				};
-				$.each(Templater.regexDirectives.apply(self, [selector]), function(m, match) {
-					d[selector].matches.push(match);
-				});
-			});
-		});
-
-		this.__internal__.translated_directives = d;
-
-		return d;
-	}*/
-
-	/*function parseTemplate() {
-		var self = this;
-		return;
-		var d = __translateRegisteredDirectives.apply(this, []);
-		
-		$.each(d, function(selector, data) {
-			$.each(data.matches, function(i, match) {
-				let template = new Templater();
-				template.__internal__.registered_directives = self.__internal__.registered_directives;
-				let s = self.subtemplates;
-
-				if (s[selector] === undefined) {
-					s[selector] = [];
-				}
-				s[selector].push(template);
-				template.directives.push({
-					selector: selector,
-					value: match[3],
-					directive: data.registered
-				});
-				template.setHtml(match[0]);
-			});
-		});
-	}*/
 
 
 
