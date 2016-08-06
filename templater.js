@@ -4,10 +4,7 @@
 	$.extend(Templater, {
 		Config: {
 			buildInDirectives: [{
-				selector: '[repeat],[repeattt]',
-				'class': TemplaterRepeatDirective
-			},{
-				selector: '[meca]',
+				selector: '[repeat]',
 				'class': TemplaterRepeatDirective
 			}]
 		}
@@ -79,9 +76,9 @@
 			var self = this;
 
 			this.walkRecursively(function(curr_instance, parent, children, children_index) {
-				/*$.each(curr_instance.directives, function(i, directive) {
-					//console.log(i, directive);
-				});*/
+				$.each(curr_instance.directives, function(i, item) {
+					console.log(i, item);
+				});
 			});
 		},
 

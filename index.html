@@ -75,10 +75,12 @@
                     selector: 'just-a-tag,'
                 });*/
                 template.setHtml(html);
-                console.log('===========', template, '============');
+                console.log('========================================');
+                console.log(template);
+                console.log('========================================');
                 $('#rendered_template').html('').prepend(template.render());
 
-                //template.initialize();
+                template.initialize();
             });
         </script>
     </head>
