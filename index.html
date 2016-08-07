@@ -26,44 +26,14 @@
         <script src="./jquery-3.1.0.slim.js"></script>
         <script src="./repeat.directive.js"></script>
         <script src="./TemplaterService.js"></script>
+        <script src="./TemplaterView.js"></script>
         <script src="./templater.js"></script>
         <script type="text/html" id="template1">
 
 
 
-<h1>Template test #1</h1>
-<div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
-    <ul>
-        <li>desenvolvendo templating system</li>
-        <li>este da parse usando <b>Expressões regulares</b></li>
-    </ul>
-
-    <just-a-tag>JUST-A-TAG #1</just-a-tag>
-    some text here
-    <just-a-tag id="foolish">JUST-A-TAG #2</just-a-tag>
-</div>
-
-<div style="float: left; margin-right: 10px; border: 1px solid grey; width: 40%; min-height: 200px;">
-    <h2>REPEAT AREAS</h2>
-    <div repeats="var i in [6,3]">
-        Repeating: {{i}}
-        <br>
-        another repeater:
-        <div repeat="var x in [22,44]" repeattt="lorem" meca="merda">inside another repeater {{x}} - {{i}}</div>
-    </div>
-
-    <button repeat = "var i in [a, b, c, d, e]">A button {{i}}
-        <div repeat="dentro de outro repea">
-            cocoroni
-        </div>
-        <div meca="dentro de rapeet"></div>
-    </button>
-
-    <button repeat="another repeat">outside repeat</button>
-    xx
-    
-</div>
-
+<div repeat="[5,8]">a repeater {{$index}}</div>
+some text
 
         </script>
         <script>
@@ -76,12 +46,22 @@
                 });*/
                 template.setHtml(html);
                 console.log('========================================');
-                console.log(template);
+                console.log('TEMPLATER', template);
                 console.log('========================================');
-                template.setData({
+                /*template.setData({
                     foo: 'the world is mine'
-                });
-                $('#rendered_template').html('').prepend(template.render());
+                });*/
+                //template.render($('#rendered_template'));
+                var view = template.generateView();
+                console.log('VIEW', view);
+                console.log('++++++++++++++++++++++++++++++++++++++++');
+                $('#rendered_template').append(view.$element);
+                /*template.createView();
+                template.updateView();
+                template.__internal__.subtemplates[0].createView();
+                template.__internal__.subtemplates[0].updateView();*/
+                console.log('window.foo contains view');
+                window.foo = view;
             });
         </script>
     </head>

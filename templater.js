@@ -1,4 +1,4 @@
-(function($, TemplaterRepeatDirective, TemplaterService) {
+(function($, TemplaterRepeatDirective, TemplaterService, TemplaterView) {
 	"use strict";
 
 	$.extend(Templater, {
@@ -13,15 +13,16 @@
 	function Templater() {
 		this.__internal__ = {
 			registered_directives: $.merge([], Templater.Config.buildInDirectives),
-			parent: undefined
+			parent: undefined,
+			subtemplates: undefined
 		}
-		this.data = {};
-		this.subtemplates;
+		//this.data = {};
 		this.html;
 		this.elementHtml;
-		this.$element;
 		this.directives;
-		this.placeholders;
+		this.views;
+		//this.placeholders;
+		//this.rendered;
 	}
 
 	$.extend(Templater.prototype, {
@@ -29,7 +30,7 @@
 			this.__internal__.registered_directives.push(directive);
 		},
 
-		setData: function(data) {
+		/*setData: function(data) {
 			var self = this;
 			var parent = this.__internal__.parent;
 			this.data = data;
@@ -38,91 +39,74 @@
 				this.data.__proto__ = parent.data;
 			}
 
-			$.each(this.subtemplates, function(i, subtemplate) {
+			$.each(this.__internal__.subtemplates, function(i, subtemplate) {
 				subtemplate.data.__proto__ = self.data;
 			});
-		},
+		},*/
 
 		setHtml: function(html) {
 			this.html = html;
 			parseTemplate.apply(this, []);
+			createPlaceholders.apply(this, []);
 		},
 
 		setParent: function(parent) {
 			if (!(parent instanceof Templater)) return;
 			this.__internal__.parent = parent;
 			this.__internal__.registered_directives = parent.__internal__.registered_directives;
-			this.data.__proto__ = parent.data;
+			//this.data.__proto__ = parent.data;
 		},
 
-		render: function() {
+		generateView: function() {
+			var template_view = new TemplaterView(this);
+			return template_view;
+		},
+
+		/*updateView: function() {
 			var self = this;
-			var html = this.html;
-
-			// replace children templates html by html placeholders
-			$.each(this.subtemplates, function(i, instance) {
-				html = html.replace(instance.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
+			$.each(this.views, function(i, view) {
+				view.$element.detach();
 			});
 
-			this.elementHtml = html;
-			this.$element = $(this.elementHtml);  // add a container because it wont insert text outside an element
-			this.placeholders = [];
-
-			// add to current instance its children placeholders jquery element (not the view element yet)
-			$.each(this.subtemplates, function(i, instance) {
-				let selector = 'templater-placeholder#children-' + i;
-				let placeholder = self.$element.find(selector);
-				placeholder = placeholder.length ? placeholder : self.$element.filter(selector);
-				self.placeholders.push(placeholder);
+			$.each(this.views, function(i, view) {
+				//console.log(self,view);
+				view.$element.appendTo(self.$container);
 			});
 
-			initializeDirectives.apply(this, []);
+		},*/
+
+		/*render: function() {
+			// recursive render method called inside TemplateView
 			
-			// render subtemplates and insert into placeholder
-			$.each(this.subtemplates, function(i, instance) {
-				self.placeholders[i].append(instance.render());
-			});
+			var self = this;
+			this.$container = $container;
+			this.views = [];
 
-			return this.$element;
+			if (this.elementHtml === undefined) {
+				// do this once
+				initializeRenderization.apply(this, []);
+			}
 
-			self.walkRecursively(function(curr_instance, parent, children, children_index) {
-				// replace children templates html by html placeholders
-				/*var el_html = curr_instance.html;
-				$.each(children, function(i, child) {
-					el_html = el_html.replace(child.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
-				});
-				
-				// initialize current instance vars
-				curr_instance.elementHtml = el_html;*/
-				/*curr_instance.$element = $(curr_instance.elementHtml);*/
-				//curr_instance.placeholders = [];
+			this.createView();
 
-				// add to current instance its children placeholders jquery element (not in the view yet)
-				/*$.each(children, function(i, child) {
-					let selector = 'templater-placeholder#children-' + i;
-					let placeholder = curr_instance.$element.find(selector);
-					placeholder = placeholder.length ? placeholder : curr_instance.$element.filter(selector);
-					curr_instance.placeholders.push(placeholder);
-				});*/
+			// @TODO: make routine and remove updateView from here
+			// make make a routine to add/remove new template_view from $element directly
+			// without calling updateView
+			// this would speed the process
+			this.updateView();
 
-				// insert subtemplates into parent
-				if (parent) {
-					parent.placeholders[children_index].append(curr_instance.$element);
-				}
-			});
-
-			return self.$element;
-		},
+			return this.$container;
+		}*//*,
 
 		walkRecursively: function(fn, parent, children_index) {
 			var self = this;
-			var children = this.subtemplates;
+			var children = this.__internal__.subtemplates;
 
 			fn(self, parent, children, children_index);
 			$.each(children, function(i, child) {
 				child.walkRecursively(fn, self, i);
 			});
-		}
+		}*/
 	});
 
 	// protect the belolw functions to not to be in the Templater API
@@ -144,7 +128,7 @@
 			return [item.html];
 		});
 
-		this.subtemplates = [];
+		this.__internal__.subtemplates = [];
 		
 		$.each(resulting_matrix, function(i, matches) {
 			let html = matches[0].html;
@@ -158,7 +142,7 @@
 			template.directives = matches;
 			template.setParent(self);
 
-			self.subtemplates.push(template);
+			self.__internal__.subtemplates.push(template);
 			template.setHtml(html);
 		});
 	}
@@ -201,13 +185,25 @@
 		return outer_found;
 	}
 
-	function initializeDirectives() {
+	function createPlaceholders() {
+		var self = this;
+		let html = this.html;
+		
+		// replace children templates html by html placeholders
+		$.each(this.__internal__.subtemplates, function(i, instance) {
+			html = html.replace(instance.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
+		});
+
+		this.elementHtml = html;
+	}
+
+	/*function initializeDirectives() {
 		var self = this;
 
 		$.each(this.directives, function(i, item) {
 			item.instance = new item.directive.class(self, item);
 		});
-	}
+	}*/
 
 	function groupBy(array, f) {
 		var groups = {};
@@ -243,4 +239,4 @@
 
 	return Templater;
 
-})(jQuery, TemplaterRepeatDirective, TemplaterService);
+})(jQuery, TemplaterRepeatDirective, TemplaterService, TemplaterView);
