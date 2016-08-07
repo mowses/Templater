@@ -28,20 +28,6 @@
 			this.__internal__.registered_directives.push(directive);
 		},
 
-		/*setData: function(data) {
-			var self = this;
-			var parent = this.__internal__.parent;
-			this.data = data;
-
-			if (parent) {
-				this.data.__proto__ = parent.data;
-			}
-
-			$.each(this.__internal__.subtemplates, function(i, subtemplate) {
-				subtemplate.data.__proto__ = self.data;
-			});
-		},*/
-
 		setHtml: function(html) {
 			this.html = html;
 			parseTemplate.apply(this, []);

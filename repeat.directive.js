@@ -2,21 +2,14 @@
 	"use strict";
 
 
-	function TemplaterRepeatDirective(params) {
+	function TemplaterRepeatDirective(params, view_instance) {
 		
 		function constructor() {
-			console.log('TemplaterRepeatDirective runs', params);
-			/*console.log(templater_instance.render);
-			var expression = params.attributeValue;
-			var run_expression = prepare_expression(expression);
-			var ret = run_expression(templater_instance.data);
-			var $element = $('<div></div>');
-
-			$.each(ret, function(i, v) {
-				$element.append('<div>ZZZ</div>');
-			});
-console.log(templater_instance.$element);
-			templater_instance.$element = $element;*/
+			console.log('TemplaterRepeatDirective:',params, view_instance);
+			//var expression = params.attributeValue;
+			/*var run_expression = prepare_expression(expression);
+			var ret = run_expression(view_instance.data);
+			console.log(ret);*/
 		}
 
 		constructor();

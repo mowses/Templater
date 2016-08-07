@@ -7,11 +7,13 @@
 	function TemplaterView(templater_instance) {
 		this.__internal__ = {
 			placeholders: {},
+			parentView: undefined,
 			templater: templater_instance
 		};
 		this.$element
 		this.subviews;
 		this.directives;
+		this.data = {};
 
 		initialize.apply(this, []);
 	}
@@ -21,6 +23,22 @@
 	});
 
 	$.extend(TemplaterView.prototype, {
+		setData: function(data) {
+			var self = this;
+			var parent = this.__internal__.parentView;
+			
+			this.data = data;
+
+			if (parent) {
+				this.data.__proto__ = parent.data;
+			}
+
+			$.each(this.subviews, function(k, subviews) {
+				$.each(subviews, function(i, view) {
+					view.data.__proto__ = self.data;
+				});
+			});
+		},
 		/*updateView: function() {
 			var self = this;
 			$.each(self.subviews, function(selector_id, subviews) {
@@ -37,6 +55,9 @@
 			let templater_instance = placeholder.templater;
 			let subview = new TemplaterView(templater_instance);
 			let element_at = this.subviews[selector_id][index];
+
+			// set subview parent
+			setParentView.apply(subview, [this]);
 
 			// insert subview at index
 			this.subviews[selector_id].splice(index, 0, subview);
@@ -99,7 +120,7 @@
 		this.directives = [];
 
 		$.each(directives, function(i, item) {
-			var directive_instance = new item.directive.class(item);
+			var directive_instance = new item.directive.class(item, self);
 			self.directives.push(directive_instance);
 		});
 
@@ -108,6 +129,11 @@
 		$.each([], function(i, directive) {
 			console.log('apply directive', directive);
 		});*/
+	}
+
+	function setParentView(parent) {
+		this.__internal__.parentView = parent;
+		this.data.__proto__ = parent.data;
 	}
 
 	

@@ -32,8 +32,8 @@
 
 
 
-<div repeat="[5,8]">a repeater {{$index}}</div>
-some text
+<div repeat="[5,8]">a repeater -- {{$index}} --</div>
+some text ++ {{'variable'}} ++ {{foo}} --
 
         </script>
         <script>
@@ -48,11 +48,11 @@ some text
                 console.log('========================================');
                 console.log('TEMPLATER', template);
                 console.log('========================================');
-                /*template.setData({
-                    foo: 'the world is mine'
-                });*/
                 //template.render($('#rendered_template'));
                 var view = template.generateView();
+                view.setData({
+                    foo: 'the world is mine'
+                });
                 console.log('++++++++++++++++++++++++++++++++++++++++');
                 console.log('VIEW', view);
                 console.log('++++++++++++++++++++++++++++++++++++++++');
