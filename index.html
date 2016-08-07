@@ -27,7 +27,7 @@
         <script src="./repeat.directive.js"></script>
         <script src="./TemplaterService.js"></script>
         <script src="./TemplaterView.js"></script>
-        <script src="./templater.js"></script>
+        <script src="./Templater.js"></script>
         <script type="text/html" id="template1">
 
 
@@ -53,6 +53,7 @@ some text
                 });*/
                 //template.render($('#rendered_template'));
                 var view = template.generateView();
+                console.log('++++++++++++++++++++++++++++++++++++++++');
                 console.log('VIEW', view);
                 console.log('++++++++++++++++++++++++++++++++++++++++');
                 $('#rendered_template').append(view.$element);

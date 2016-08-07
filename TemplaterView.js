@@ -11,6 +11,7 @@
 		};
 		this.$element
 		this.subviews;
+		this.directives;
 
 		initialize.apply(this, []);
 	}
@@ -39,12 +40,16 @@
 
 			// insert subview at index
 			this.subviews[selector_id].splice(index, 0, subview);
-			
+
+			// add to DOM
 			if (element_at) {
-				subview.$element.insertBefore(element_at.$element);
+				subview.$element.insertBefore(element_at.$element[0]);
 			} else {
 				placeholder.$el.prepend(subview.$element);
 			}
+
+			// init directives
+			initializeDirectives.apply(subview, [placeholder.templater.directives]);
 		},
 
 		removeSubView: function(selector_id, index) {
@@ -64,12 +69,12 @@
 		this.__internal__.placeholders = {};
 
 		// add container to html, otherwise it wont insert text blocks outside elements
-		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
+		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>').contents();
 		
 		// store placeholders
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 			let selector_id = selector + i;
-			let $placeholder = self.$element.find(selector_id);
+			let $placeholder = self.$element.find(selector_id).add(self.$element.filter(selector_id));
 			self.__internal__.placeholders[selector_id] = {
 				$el: $placeholder,
 				templater: instance
@@ -86,6 +91,23 @@
 			
 			self.addSubView(selector_id);
 		});
+	}
+
+	function initializeDirectives(directives) {
+		var self = this;
+
+		this.directives = [];
+
+		$.each(directives, function(i, item) {
+			var directive_instance = new item.directive.class(item);
+			self.directives.push(directive_instance);
+		});
+
+		/*// apply directives functions
+		console.log(placeholder.templater.directives);
+		$.each([], function(i, directive) {
+			console.log('apply directive', directive);
+		});*/
 	}
 
 	

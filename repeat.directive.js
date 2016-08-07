@@ -2,10 +2,10 @@
 	"use strict";
 
 
-	function TemplaterRepeatDirective(templater_instance, params) {
+	function TemplaterRepeatDirective(params) {
 		
 		function constructor() {
-			console.log('TemplaterRepeatDirective runs');
+			console.log('TemplaterRepeatDirective runs', params);
 			/*console.log(templater_instance.render);
 			var expression = params.attributeValue;
 			var run_expression = prepare_expression(expression);
