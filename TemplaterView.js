@@ -4,26 +4,66 @@
 	/**
 	 * a view for templates
 	 */
+	
+	$.extend(TemplaterView, {
+		Config: {
+			dataBindingExpression: /({{([\s\S]*?)}})/gi
+		}
+	});
+
 	function TemplaterView(templater_instance) {
 		this.__internal__ = {
-			placeholders: {},
-			parentView: undefined,
+			//parentView: undefined,
 			templater: templater_instance
 		};
-		this.$element
+		
+		this.$element;
+		this.placeholders;
+		this.data = {};
+		this.dataBindings = {
+			textnodes: null
+		};
+		/*
 		this.subviews;
 		this.directives;
-		this.data = {};
 
+		*/
+	
 		initialize.apply(this, []);
 	}
 	
-	$.extend(TemplaterView, {
-		
-	});
-
 	$.extend(TemplaterView.prototype, {
-		setData: function(data) {
+		render: function($element) {
+			var self = this;
+
+			//initializeDirectives.apply(this, []);
+			doDataBindings.apply(this, []);
+
+			/*$.each(self.repeatables, function(i, repeatable) {
+				console.log(repeatable);
+			});*/
+
+			$.each(self.placeholders, function(k, placeholder) {
+				$.each(placeholder.views, function(i, view) {
+					view.render(placeholder.$el);
+				});
+			});
+			
+			this.$element.appendTo($element);
+		},
+
+		repeaterViews: function() {
+			var self = this;
+			var views = [];
+
+			$.each(self.__internal__.templater.directives, function(i, item) {
+				var directive_instance = new item.directive.class(item, self);
+				$.merge(views, directive_instance.getView());
+			});
+
+			return views;
+		}
+		/*setData: function(data) {
 			var self = this;
 			var parent = this.__internal__.parentView;
 			
@@ -38,7 +78,7 @@
 					view.data.__proto__ = self.data;
 				});
 			});
-		},
+		},*/
 		/*updateView: function() {
 			var self = this;
 			$.each(self.subviews, function(selector_id, subviews) {
@@ -48,7 +88,7 @@
 			});
 		},*/
 
-		addSubView: function(selector_id, index) {
+		/*addSubView: function(selector_id, index) {
 			index = index ? index : 0;
 
 			let placeholder = this.__internal__.placeholders[selector_id];
@@ -78,16 +118,16 @@
 			
 			subview.$element.remove();
 			this.subviews[selector_id].splice(index, 1);
-		}
+		}*/
 	});
 
 	function initialize() {
 		var self = this;
-		var selector = 'templater-placeholder#children-';
 		var templater_instance = this.__internal__.templater;
+		var selector = 'templater-placeholder#children-';
 
-		this.subviews = {};
-		this.__internal__.placeholders = {};
+		/*this.subviews = {};*/
+		this.placeholders = {};
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>').contents();
@@ -96,13 +136,14 @@
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 			let selector_id = selector + i;
 			let $placeholder = self.$element.find(selector_id).add(self.$element.filter(selector_id));
-			self.__internal__.placeholders[selector_id] = {
+			
+			self.placeholders[selector_id] = {
 				$el: $placeholder,
-				templater: instance
+				views: instance.generateViews()
 			};
 		});
 
-		// create subviews
+		/*// create subviews
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 			let selector_id = selector + i;
 
@@ -111,29 +152,108 @@
 			}
 			
 			self.addSubView(selector_id);
-		});
+		});*/
+
+		initializeDataBindings.apply(this, []);
 	}
 
-	function initializeDirectives(directives) {
+	/*function initializeDirectives() {
 		var self = this;
+		
+		$.each(self.__internal__.templater.directives, function(i, item) {
+			var directive_instance = new item.directive.class(item, self);
+		});*/
 
-		this.directives = [];
+		/*this.directives = [];
 
 		$.each(directives, function(i, item) {
 			var directive_instance = new item.directive.class(item, self);
 			self.directives.push(directive_instance);
+		});*/
+	//}
+
+	function doDataBindings() {
+		var self = this;
+		var data = this.data;
+		//console.log('doDataBindings called:', self.__internal__.templater.elementHtml, data);
+
+		// textnodes
+		$.each(this.dataBindings.textnodes, function(i, item) {
+			var result = item.originalText;
+			$.each(item.matches, function(i, match) {
+				result = result.replace(match[1], match.expression(data))
+			});
+			item.el.nodeValue = result;
+		});
+	}
+
+	function initializeDataBindings() {
+		var self = this;
+		var textnodes = getTextNodesWithBind(this.$element);
+
+		$.each(textnodes, function(i, item) {
+			$.each(item.matches, function(i, match) {
+				match.expression = prepare_expression(match[2]);
+			});
 		});
 
-		/*// apply directives functions
-		console.log(placeholder.templater.directives);
-		$.each([], function(i, directive) {
-			console.log('apply directive', directive);
-		});*/
+		this.dataBindings.textnodes = textnodes;
 	}
+
+	function getTextNodesWithBind($el) {
+		var textnodes = [];
+		var bound = [];
+		// get text nodes
+		$.each($el, function(i, el) {
+			var nodes;
+			if (el.nodeType == 3) {
+				nodes = [el];
+			} else {
+				nodes = getTextNodesIn(el);
+			}
+			$.merge(textnodes, nodes);
+		});
+
+		$.each(textnodes, function(i, textnode) {
+			var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
+			var m;
+			var matches = [];
+
+			while (m = regexp.exec(textnode.nodeValue)) {
+				matches.push(m);
+			}
+			if (!matches.length) return;
+
+			bound.push({
+				el: textnode,
+				originalText: textnode.nodeValue,
+				matches: matches
+			});
+		});
+		
+		return bound;
+	}
+
+	/*
 
 	function setParentView(parent) {
 		this.__internal__.parentView = parent;
 		this.data.__proto__ = parent.data;
+	}*/
+
+	function getTextNodesIn(el) {
+		return $(el).find(":not(iframe)").addBack().contents().filter(function() {
+			return this.nodeType == 3;
+		});
+	}
+
+	function prepare_expression(expression) {
+		var fn = new Function("obj",
+			"var e;" +
+			// Introduce the data as local variables using with(){}
+			"with(obj) { (function() { 'use strict'; e = " + expression + ";})();} return e;");
+
+		return fn;
 	}
 
 	

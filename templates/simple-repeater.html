@@ -1,0 +1,19 @@
+<h1>Template test</h1>
+{{ 'simple string var' }}
+
+<div repeat="[22,33]">
+	hahaha {{'dentro de div'}} nao é?
+	<br>
+
+	current $index: {{$index}} e $value: {{$value}}.<br>
+	{{ $value + ' * ' + $index + ' = ' + $value * $index }}
+	<div>
+		{{'outra div'}} :: 
+
+		<div repeat="[9,8]">
+			{{'$index: ' + $index}} {{'$value: ' + $value}}
+		</div>
+	</div>
+	<hr>
+	{{'$index: ' + $index}} {{'$value: ' + $value}}
+</div>

@@ -1,22 +1,59 @@
 (function($, TemplaterRepeatDirective, TemplaterService, TemplaterView) {
 	"use strict";
 
+	var loading_templates = {};
+	var loaded_templates = {};
+
 	$.extend(Templater, {
 		Config: {
-			buildInDirectives: [{
+			builtInDirectives: [{
 				selector: '[repeat]',
 				'class': TemplaterRepeatDirective
 			}]
+		},
+
+		loadView: function(url, callback) {
+			var url_id = toValidId(url);
+			var script;
+			var templater;
+			
+			if (loaded_templates[url_id]) {
+				//console.log('TEMPLATER INSTANCE:', loaded_templates[url_id]);
+				return callback(loaded_templates[url_id].generateView());
+			}
+
+			if (loading_templates[url_id] !== undefined) {
+				loading_templates[url_id].done(function() {
+					Templater.loadView(url, callback);
+				});
+				return;
+			}
+
+			script = $('script#' + url_id);
+			if (script.length) {
+				templater = new Templater();
+				templater.setHtml(script.html());
+				loaded_templates[url_id] = templater;
+				return Templater.loadView(url, callback);
+			}
+
+			loading_templates[url_id] = $.get(url, null, null, 'html')
+			.done(function(response) {
+				$('<script type="text/html" id="' + url_id + '">' + response + '</script>').appendTo($('head'));
+				delete loading_templates[url_id];
+				Templater.loadView(url, callback);
+			});
 		}
 	});
 
 	function Templater() {
+		
 		this.__internal__ = {
-			registered_directives: $.merge([], Templater.Config.buildInDirectives),
+			registered_directives: $.merge([], Templater.Config.builtInDirectives),
 			parent: undefined,
 			subtemplates: undefined
 		}
-		
+
 		this.html;
 		this.elementHtml;
 		this.directives;
@@ -24,10 +61,7 @@
 	}
 
 	$.extend(Templater.prototype, {
-		registerDirective: function(directive) {
-			this.__internal__.registered_directives.push(directive);
-		},
-
+		
 		setHtml: function(html) {
 			this.html = html;
 			parseTemplate.apply(this, []);
@@ -43,7 +77,15 @@
 		generateView: function() {
 			var template_view = new TemplaterView(this);
 			return template_view;
-		}/*,
+		},
+
+		generateViews: function() {
+			return this.generateView().repeaterViews();
+		}
+
+		/*registerDirective: function(directive) {
+			this.__internal__.registered_directives.push(directive);
+		},
 
 		walkRecursively: function(fn, parent, children_index) {
 			var self = this;
@@ -55,6 +97,10 @@
 			});
 		}*/
 	});
+
+	function toValidId(url) {
+		return url.replace(/[#,./]/gi, '_');
+	}
 
 	// protect the belolw functions to not to be in the Templater API
 	// making these non user callable
@@ -162,19 +208,19 @@
 
 
 	// Node: Export function
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports.Templater = Templater;
-    }
-    // AMD/requirejs: Define the module
-    else if (typeof define === 'function' && define.amd) {
-        define(function() {
-            return Templater;
-        });
-    }
-    // Browser: Expose to window
-    else {
-        window.Templater = Templater;
-    }
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports.Templater = Templater;
+	}
+	// AMD/requirejs: Define the module
+	else if (typeof define === 'function' && define.amd) {
+		define(function() {
+			return Templater;
+		});
+	}
+	// Browser: Expose to window
+	else {
+		window.Templater = Templater;
+	}
 
 	return Templater;
 

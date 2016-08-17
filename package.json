@@ -1,0 +1,13 @@
+{
+  "name": "Templater",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "connect": "^3.4.1",
+    "serve-static": "^1.11.1"
+  }
+}

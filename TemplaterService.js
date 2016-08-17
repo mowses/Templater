@@ -66,6 +66,18 @@
 			return matches;
 		},
 
+		/*findByRegex: function(html, regex) {
+			var regexp = new RegExp(regex, 'gi');
+			var matches = [];
+			var m;
+
+			while (m = regexp.exec(html)) {
+				matches.push(m);
+			}
+
+			return matches;
+		},*/
+
 		parseSelector: function(selector) {
 			selector = selector.trim() + ' ';
 			let tag_regexp = /^([a-zA-Z0-9-_]*)[\[\]\s]/gi;
@@ -96,17 +108,20 @@
 		_html = '<' + _html;
 		regex_lazy.lastIndex = 0;  // reset regex lazy
 		m2 = regex_lazy.exec(_html);
-
 		if (!m2) return m;
-		
-		// restore html content from replacement
-		$.each(_replaced, function(i, value) {
-			$.each(m, function(j) {
-				let txt = '::TEMPLATER-REPLACED_TEXT::' + i + '::';
-				m2[j] = m2[j].replace(txt, value);
-			});
-		});
 
+		// restore html content from replacement
+		$.each(m2, function(j) {
+			var m;
+			var regexp = new RegExp(/::TEMPLATER-REPLACED_TEXT::(\d)+::/, 'g');
+
+			while (m = regexp.exec(m2[j])) {
+				m2[j] = m2[j].replace(m[0], _replaced[m[1]]);
+				// reset regex internal index search
+				regexp.lastIndex = 0;
+			}
+		});
+		
 		return m2;
 	}
 
