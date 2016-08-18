@@ -9,7 +9,7 @@
 
 	function constructor(params, view_instance) {
 		var self = this;
-		var data = {};
+		var data = view_instance.model.getData();
 		var expression = params.attributeValue;
 		var run_expression = prepare_expression(expression);
 		var ret = run_expression(data);
