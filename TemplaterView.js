@@ -20,8 +20,8 @@
 		};
 		
 		this.$element;
-		this.placeholders = {};
-		this.childViews = [];
+		this.placeholders = [];
+		this.childViews;
 		this.model = new ObserverCore();
 		this.dataBindings = {
 			textnodes: null
@@ -41,13 +41,10 @@
 			// create and append views for placeholders
 			let templater_instance = this.__internal__.templater;
 			$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
-				let selector_id = 'templater-placeholder#children-' + i;
-				var placeholder = self.placeholders[selector_id];
+				var placeholder = self.placeholders[i];
 				let base_view = placeholder.baseView;
 				let views = repeaterViews.apply(base_view, []);				
 				base_view.childViews = views;
-
-				placeholder.views = views;
 
 				$.each(views, function(i, view) {
 					view.render(placeholder.$el);
@@ -82,10 +79,9 @@
 			});
 			setParentView.apply(base_view, [self]);
 			
-			self.placeholders[selector_id] = {
+			self.placeholders[i] = {
 				$el: $placeholder,
-				baseView: base_view,
-				views: []
+				baseView: base_view
 			};
 		});
 
