@@ -2,19 +2,6 @@
 cocoroni value: <b>{{cocoroni}}</b><br>
 {{ 'simple string var' }}
 
-<div repeat="repeater">
-	hahaha {{'dentro de div'}} nao é?
-	<br>
-
-	current $index: {{$index}} e $value: {{$value}}.<br>
-	{{ $value + ' * ' + $index + ' = ' + $value * $index }}
-	<div>
-		{{'outra div'}} :: 
-
-		<div repeat="[9,8]">
-			{{'$index: ' + $index}} {{'$value: ' + $value}}
-		</div>
-	</div>
-	<hr>
-	{{'$index: ' + $index}} {{'$value: ' + $value}}
+<div repeat="[22]">
+	hahaha {{'dentro de div'}} nao é? {{cocoroni}}
 </div>

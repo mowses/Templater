@@ -79,10 +79,6 @@
 			return template_view;
 		},
 
-		generateViews: function() {
-			return this.generateView().repeaterViews();
-		}
-
 		/*registerDirective: function(directive) {
 			this.__internal__.registered_directives.push(directive);
 		},
