@@ -1,14 +1,40 @@
-(function($) {
+(function($, Events) {
 	"use strict";
 
 
-	function TemplaterRepeatDirective() {
-		this.views = [];
-		constructor.apply(this, arguments);
+	function TemplaterRepeatDirective(params, view_instance) {
+		this.events = new Events([
+			'ready'
+		]);
+
+		this.execute = function() {
+			var self = this;
+
+			function create_views() {
+				console.log('carry on from here. instead of destroy and recreate, just reuse the views instances changing its model to the new value');
+				destroyPreviousViews.apply(self, [params, view_instance]);
+				var views = createChildViews.apply(self, [params, view_instance]);
+				self.events.trigger('ready', views);
+			}
+
+			view_instance.events.on(['changed model', 'changed model __proto__'], create_views);
+			create_views();
+		}
 	}
 
-	function constructor(params, view_instance) {
+	$.extend(TemplaterRepeatDirective.prototype, {
+		
+	});
+
+	function destroyPreviousViews(params, view_instance) {
+		$.each(view_instance.childViews, function(i, view) {
+			view.destroy();
+		});
+	}
+
+	function createChildViews(params, view_instance) {
 		var self = this;
+		view_instance.childViews = [];
 		var data = view_instance.model.getData();
 		var expression = params.attributeValue;
 		var run_expression = prepare_expression(expression);
@@ -20,22 +46,19 @@
 
 		$.each(ret, function(i, value) {
 			let view = view_instance.__internal__.templater.generateView();
-			view.model.setData('$index', i);
-			view.model.setData('$key', i);
+			view.model.setData({
+				'$index': i,
+				'$key': i,
+				'$value': value
+			});
 			view.model.setData(repeat_as_key, i);
 			view.model.setData(repeat_as_value, value);
-			view.model.setData('$value', value);
 
-			self.views.push(view);
+			view_instance.childViews.push(view);
 		});
 
+		return view_instance.childViews;
 	}
-
-	$.extend(TemplaterRepeatDirective.prototype, {
-		getView: function() {
-			return this.views;
-		}
-	});
 
 	function prepare_expression(expression) {
 		var fn = new Function("obj",
@@ -69,4 +92,4 @@
 
 	return TemplaterRepeatDirective;
 
-})(jQuery);
+})(jQuery, Events);
