@@ -20,11 +20,11 @@
 
 		$.each(ret, function(i, value) {
 			let view = view_instance.__internal__.templater.generateView();
-			view.data.$index = i;
-			view.data.$key = i;
-			view.data[repeat_as_key] = i;
-			view.data[repeat_as_value] = value;
-			view.data.$value = value;
+			view.model.setData('$index', i);
+			view.model.setData('$key', i);
+			view.model.setData(repeat_as_key, i);
+			view.model.setData(repeat_as_value, value);
+			view.model.setData('$value', value);
 
 			self.views.push(view);
 		});

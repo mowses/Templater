@@ -1,4 +1,4 @@
-(function($) {
+(function($, ObserverCore) {
 	"use strict";
 
 	/**
@@ -12,14 +12,16 @@
 	});
 
 	function TemplaterView(templater_instance) {
+		var self = this;
+		
 		this.__internal__ = {
-			//parentView: undefined,
+			parentView: undefined,
 			templater: templater_instance
 		};
 		
 		this.$element;
 		this.placeholders;
-		this.data = {};
+		this.model = new ObserverCore();
 		this.dataBindings = {
 			textnodes: null
 		};
@@ -37,7 +39,7 @@
 			var self = this;
 
 			//initializeDirectives.apply(this, []);
-			doDataBindings.apply(this, []);
+			//doDataBindings.apply(this, []);
 
 			/*$.each(self.repeatables, function(i, repeatable) {
 				console.log(repeatable);
@@ -48,7 +50,11 @@
 					view.render(placeholder.$el);
 				});
 			});
-			
+
+			this.model.watch(null, function() {
+				doDataBindings.apply(self, []);
+			}).apply();
+
 			this.$element.appendTo($element);
 		},
 
@@ -136,10 +142,15 @@
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 			let selector_id = selector + i;
 			let $placeholder = self.$element.find(selector_id).add(self.$element.filter(selector_id));
+			var views = instance.generateViews();
+
+			$.each(views, function(i, view) {
+				setParentView.apply(view, [self]);
+			});
 			
 			self.placeholders[selector_id] = {
 				$el: $placeholder,
-				views: instance.generateViews()
+				views: views
 			};
 		});
 
@@ -174,7 +185,7 @@
 
 	function doDataBindings() {
 		var self = this;
-		var data = this.data;
+		var data = this.model.getData();
 		//console.log('doDataBindings called:', self.__internal__.templater.elementHtml, data);
 
 		// textnodes
@@ -234,12 +245,10 @@
 		return bound;
 	}
 
-	/*
-
 	function setParentView(parent) {
+		if (!(parent instanceof TemplaterView)) return;
 		this.__internal__.parentView = parent;
-		this.data.__proto__ = parent.data;
-	}*/
+	}
 
 	function getTextNodesIn(el) {
 		return $(el).find(":not(iframe)").addBack().contents().filter(function() {
@@ -278,4 +287,4 @@
 
 	return TemplaterView;
 
-})(jQuery);
+})(jQuery, ObserverCore);

@@ -27,7 +27,10 @@
 				margin: 10px 0px 10px 0px;
 			}
 		</style>
-		<script src="./jquery-3.1.0.js"></script>
+		<script src="./dependencies/jquery-3.1.0.js"></script>
+		<script src="./dependencies/ObjDiff.js"></script>
+		<script src="./dependencies/Events.js"></script>
+		<script src="./dependencies/ObserverCore.js"></script>
 		<script src="./directives/repeat.directive.js"></script>
 		<script src="./TemplaterService.js"></script>
 		<script src="./TemplaterView.js"></script>
@@ -39,7 +42,12 @@
 					'class': TextParserDirective
 				});*/
 				Templater.loadView('templates/simple-repeater.html', function(view) {
+					window.view = view;
 					console.log('loaded template and view is', view);
+					view.model.setData({
+						cocoroni: 'macaaca la',
+						repeater: [5,1]
+					});
 					view.render($('body'));
 				});
 				
