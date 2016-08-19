@@ -43,6 +43,11 @@
 				delete loading_templates[url_id];
 				Templater.loadView(url, callback);
 			});
+		},
+
+		// return all elements within $el (not include $el)
+		getAllElements: function($el) {
+			return $el.find(":not(iframe)").addBack().contents();
 		}
 	});
 
@@ -57,7 +62,10 @@
 		this.html;
 		this.elementHtml;
 		this.directives;
-		this.views;
+		this.dataBindings = {
+			$allElements: null,
+			textnodes: null
+		};
 	}
 
 	$.extend(Templater.prototype, {
@@ -66,6 +74,8 @@
 			this.html = html;
 			parseTemplate.apply(this, []);
 			createPlaceholders.apply(this, []);
+			setDataBindingElements.apply(this, []);
+			initializeDataBindings.apply(this, []);
 		},
 
 		setParent: function(parent) {
@@ -186,6 +196,52 @@
 		this.elementHtml = html;
 	}
 
+	function setDataBindingElements() {
+		var self = this;
+		var all_elements = Templater.getAllElements($('<div>' + this.elementHtml + '</div>'));
+
+		this.dataBindings.$allElements = all_elements;
+		this.dataBindings.textnodes = filterTextNodesWithBind(all_elements);
+	}
+
+	function filterTextNodesWithBind($elements) {
+		var textnodes = $.grep($elements, function(el) {
+			return (el.nodeType == 3);
+		});
+		var bound = [];
+
+		$.each(textnodes, function(i, textnode) {
+			var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
+			var m;
+			var matches = [];
+
+			while (m = regexp.exec(textnode.nodeValue)) {
+				matches.push(m);
+			}
+			if (!matches.length) return;
+
+			bound.push({
+				el: textnode,
+				indexOf: $elements.index(textnode),
+				originalText: textnode.nodeValue,
+				matches: matches
+			});
+		});
+		
+		return bound;
+	}
+
+	function initializeDataBindings() {
+		var self = this;
+		var textnodes = this.dataBindings.textnodes;
+
+		$.each(textnodes, function(i, item) {
+			$.each(item.matches, function(i, match) {
+				match.expression = prepare_expression(match[2]);
+			});
+		});
+	}
+
 	function groupBy(array, f) {
 		var groups = {};
 		array.forEach(function(o) {
@@ -197,6 +253,15 @@
 		return Object.keys(groups).map(function(group) {
 			return groups[group]; 
 		})
+	}
+
+	function prepare_expression(expression) {
+		var fn = new Function("obj",
+			"var e;" +
+			// Introduce the data as local variables using with(){}
+			"with(obj) { (function() { 'use strict'; e = " + expression + ";})();} return e;");
+
+		return fn;
 	}
 
 

@@ -39,7 +39,7 @@
 	function createOrUpdateChildViews(params, view_instance) {
 		var self = this;
 		var views = [];
-		var data = view_instance.model.getData();
+		var data = view_instance.model.getData(false);
 		var expression = params.attributeValue;
 		var run_expression = prepare_expression(expression);
 		var ret = run_expression(data);
@@ -60,8 +60,6 @@
 				'$value': $value
 			};
 			let view = (childviews && childviews[$index]) || templater.generateView();
-			console.log('kkkk');return;
-			
 			view.model.extendData(data);
 
 			views.push(view);

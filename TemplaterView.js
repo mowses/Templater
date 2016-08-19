@@ -35,6 +35,7 @@
 		this.placeholders = [];
 		this.childViews;
 		this.dataBindings = {
+			$allElements: null,
 			textnodes: null
 		};
 		
@@ -86,7 +87,6 @@
 		.on('changed model __proto__.baseView', function() {
 			// update child views
 			$.each(self.childViews, function(i, childview) {
-				//console.log('baseView',self.model.getData().__proto__, 'childview:', childview, childview.model.getData().__proto__);
 				doDataBindings.apply(childview, []);
 			});
 		})
@@ -102,6 +102,8 @@
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
+		// make sure this.$element is inside a container before calling initializeDataBindings()
+		initializeDataBindings.apply(this, []);  // call this BEFORE (ANTES) this.$element.contents()
 		
 		// store placeholders
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
@@ -123,9 +125,6 @@
 		});
 
 		this.$element = this.$element.contents();
-
-		console.log('carry on from here. too slow...');
-		//initializeDataBindings.apply(this, []);
 	}
 
 	function Timeout() {
@@ -157,7 +156,7 @@
 
 	function doDataBindings() {
 		var self = this;
-		var data = this.model.getData();
+		var data = this.model.getData(false);
 		//var parent = self.__internal__.parentView;
 		
 		// textnodes
@@ -172,49 +171,15 @@
 
 	function initializeDataBindings() {
 		var self = this;
-		var textnodes = getTextNodesWithBind(this.$element);
-
-		$.each(textnodes, function(i, item) {
-			$.each(item.matches, function(i, match) {
-				match.expression = prepare_expression(match[2]);
-			});
-		});
-
-		this.dataBindings.textnodes = textnodes;
-	}
-
-	function getTextNodesWithBind($el) {
-		var textnodes = [];
-		var bound = [];
-		// get text nodes
-		$.each($el, function(i, el) {
-			var nodes;
-			if (el.nodeType == 3) {
-				nodes = [el];
-			} else {
-				nodes = getTextNodesIn(el);
-			}
-			$.merge(textnodes, nodes);
-		});
-
-		$.each(textnodes, function(i, textnode) {
-			var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
-			var m;
-			var matches = [];
-
-			while (m = regexp.exec(textnode.nodeValue)) {
-				matches.push(m);
-			}
-			if (!matches.length) return;
-
-			bound.push({
-				el: textnode,
-				originalText: textnode.nodeValue,
-				matches: matches
-			});
-		});
+		let templater = this.__internal__.templater;
 		
-		return bound;
+		// $allElements MUST match its templater dataBindings.$allElements
+		this.dataBindings.$allElements = Templater.getAllElements(this.$element);
+		this.dataBindings.textnodes = $.map(templater.dataBindings.textnodes, function(item) {
+			return $.extend(true, {}, item, {
+				el: self.dataBindings.$allElements[item.indexOf]
+			});
+		});
 	}
 
 	function setParentView(parent) {
@@ -224,28 +189,13 @@
 		var self = this;
 		
 		function setProto() {
-			self.model.getData().__proto__ = parent.model.getData();
+			self.model.getData(false).__proto__ = parent.model.getData(false);
 			self.events.trigger('changed model __proto__');
 		}
 
 		this.__internal__.parentView = parent;
 		parent.events.on('changed model.for[' + this.__internal__.id + ']', setProto);
 		setProto();
-	}
-
-	function getTextNodesIn(el) {
-		return $(el).find(":not(iframe)").addBack().contents().filter(function() {
-			return this.nodeType == 3;
-		});
-	}
-
-	function prepare_expression(expression) {
-		var fn = new Function("obj",
-			"var e;" +
-			// Introduce the data as local variables using with(){}
-			"with(obj) { (function() { 'use strict'; e = " + expression + ";})();} return e;");
-
-		return fn;
 	}
 
 	
