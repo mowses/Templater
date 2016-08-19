@@ -10,15 +10,25 @@
 		this.execute = function() {
 			var self = this;
 
-			function create_views() {
-				console.log('carry on from here. instead of destroy and recreate, just reuse the views instances changing its model to the new value');
-				destroyPreviousViews.apply(self, [params, view_instance]);
-				var views = createChildViews.apply(self, [params, view_instance]);
+			function create_or_update_views() {
+				var views = createOrUpdateChildViews.apply(self, [params, view_instance]);
+
+				// destroy old views
+				if (view_instance.childViews) {
+					let len = views.length;
+					let t = view_instance.childViews.length;
+
+					for (let i = len; i < t; i++) {
+						view_instance.childViews[i].destroy();
+					}
+					view_instance.childViews.splice(len, t);
+				}
+				
 				self.events.trigger('ready', views);
 			}
 
-			view_instance.events.on(['changed model', 'changed model __proto__'], create_views);
-			create_views();
+			view_instance.events.on(['changed model', 'changed model __proto__'], create_or_update_views);
+			create_or_update_views();
 		}
 	}
 
@@ -26,38 +36,37 @@
 		
 	});
 
-	function destroyPreviousViews(params, view_instance) {
-		$.each(view_instance.childViews, function(i, view) {
-			view.destroy();
-		});
-	}
-
-	function createChildViews(params, view_instance) {
+	function createOrUpdateChildViews(params, view_instance) {
 		var self = this;
-		view_instance.childViews = [];
+		var views = [];
 		var data = view_instance.model.getData();
 		var expression = params.attributeValue;
 		var run_expression = prepare_expression(expression);
 		var ret = run_expression(data);
-		// repeat-as attribute
-		var repeat_as = (view_instance.$element.attr('repeat-as')||'').split(',');
+		var templater = view_instance.__internal__.templater;
+		var $index = 0;
+		// repeat-as attribute: $value,$key,$index
+		/*var repeat_as = (view_instance.$element.attr('repeat-as')||'').split(',');
 		var repeat_as_key = (repeat_as[0]||'').trim() || '$index';
-		var repeat_as_value = (repeat_as[1]||'').trim() || '$value';
+		var repeat_as_value = (repeat_as[1]||'').trim() || '$value';*/
 
-		$.each(ret, function(i, value) {
-			let view = view_instance.__internal__.templater.generateView();
-			view.model.setData({
-				'$index': i,
-				'$key': i,
-				'$value': value
-			});
-			view.model.setData(repeat_as_key, i);
-			view.model.setData(repeat_as_value, value);
+		$.each(ret, function($key, $value) {
+			let childviews = view_instance.childViews;
+			// if by some reason you have changed these values, then
+			// next time you change parent model, will restore it
+			let data = {
+				'$index': $index,
+				'$key': $key,
+				'$value': $value
+			};
+			let view = (childviews && childviews[$index]) || templater.generateView();
+			view.model.extendData(data);
 
-			view_instance.childViews.push(view);
+			views.push(view);
+			$index++;
 		});
 
-		return view_instance.childViews;
+		return views;
 	}
 
 	function prepare_expression(expression) {

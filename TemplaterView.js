@@ -8,6 +8,11 @@
 	$.extend(TemplaterView, {
 		Config: {
 			dataBindingExpression: /({{([\s\S]*?)}})/gi
+		},
+
+		generateID: function() {
+			let date = new Date();
+			return date.getTime();
 		}
 	});
 
@@ -15,6 +20,7 @@
 		var self = this;
 		
 		this.__internal__ = {
+			id: null,
 			parentView: undefined,
 			templater: templater_instance
 		};
@@ -42,13 +48,10 @@
 			// create and append views for placeholders
 			let templater_instance = this.__internal__.templater;
 			$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
-				var placeholder = self.placeholders[i];
+				let placeholder = self.placeholders[i];
 				let base_view = placeholder.baseView;
 				
-				repeaterViews.apply(base_view, []);
-				$.each(base_view.childViews, function(i, view) {
-					view.render(placeholder.$el);
-				});
+				repeaterViews.apply(base_view, [placeholder]);
 			});
 
 			this.events.trigger('render');
@@ -56,7 +59,11 @@
 		},
 
 		destroy: function() {
-			console.log('destroying view instance...');
+			let parent = this.__internal__.parentView;
+			let id = this.__internal__.id;
+
+			parent.events.remove('changed model.for[' + id + ']');
+
 			this.$element.remove();
 		}
 	});
@@ -65,6 +72,8 @@
 		var self = this;
 		var templater_instance = this.__internal__.templater;
 		var selector = 'templater-placeholder#children-';
+		
+		this.__internal__.id = TemplaterView.generateID();
 
 		this.model.watch(null, function(data) {
 			self.events.trigger('changed model', data);
@@ -81,15 +90,14 @@
 				doDataBindings.apply(childview, []);
 			});
 		})
-		/*.on(['changed model'], function() {
-			//doDataBindings.apply(self, []);
-		})*/
-		.on(['render'], function() {
+		.once('render', function() {
+			var timeout = new Timeout();
+
 			self.events
-			.on(['changed model.refresh-view', 'changed model __proto__'], function() {
+			.on(['changed model.refresh-view', 'changed model __proto__'], timeout.wait(function() {
 				doDataBindings.apply(self, []);
-			})
-			.trigger('changed model.refresh-view');
+			}));
+			doDataBindings.apply(self, []);
 		});
 
 		// add container to html, otherwise it wont insert text blocks outside elements
@@ -119,16 +127,28 @@
 		initializeDataBindings.apply(this, []);
 	}
 
-	function repeaterViews() {
+	function Timeout() {
+		var timeout;
+		this.wait = function(fn) {
+			return function() {
+				clearTimeout(timeout);
+				timeout = setTimeout(fn);
+			}
+		}
+	}
+
+	function repeaterViews(placeholder) {
 		var self = this;
 		
 		$.each(self.__internal__.templater.directives, function(i, item) {
 			var directive_instance = new item.directive.class(item, self);
 			directive_instance.events.on('ready', function(views) {
 				$.each(views, function(i, view) {
-					console.log('carr on from here, just append to base view');
 					setParentView.apply(view, [self]);
+					view.render(placeholder.$el);
+
 				});
+				self.childViews = views;
 			});
 			directive_instance.execute();
 		});
@@ -208,7 +228,7 @@
 		}
 
 		this.__internal__.parentView = parent;
-		parent.events.on('changed model', setProto);
+		parent.events.on('changed model.for[' + this.__internal__.id + ']', setProto);
 		setProto();
 	}
 
