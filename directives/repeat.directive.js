@@ -60,6 +60,8 @@
 				'$value': $value
 			};
 			let view = (childviews && childviews[$index]) || templater.generateView();
+			console.log('kkkk');return;
+			
 			view.model.extendData(data);
 
 			views.push(view);

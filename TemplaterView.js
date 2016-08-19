@@ -124,7 +124,8 @@
 
 		this.$element = this.$element.contents();
 
-		initializeDataBindings.apply(this, []);
+		console.log('carry on from here. too slow...');
+		//initializeDataBindings.apply(this, []);
 	}
 
 	function Timeout() {
