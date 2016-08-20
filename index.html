@@ -46,7 +46,12 @@
 					console.log('loaded template and view is', view);
 					view.model.setData({
 						cocoroni: 'macaaca la',
-						repeater: [5,1]
+						repeater: [5,1],
+						meca: 'the world is mine',
+						styles: {
+							color: 'red',
+							border: '2px solid black'
+						}
 					});
 					view.model.apply();
 					view.render($('body'));

@@ -1,6 +1,14 @@
-<h1>Template test</h1>
+<style>
+	.myclass {
+		padding: 10px;
+		border: {{styles.border}};
+	}
+</style>
+
+<h1 style="display: inline">Template test</h1> change cocoroni: <input type="text" style="background: {{styles.color}}" value="{{cocoroni}}" class="myclass" />
+<br clear="all">
 cocoroni value: <b>{{cocoroni}}</b><br>
-{{ 'simple string var' }}
+{{ 'simple string var' }} - <u>{{ '**' + meca + '**' }}</u>
 
 <div repeat="repeater">
 	$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de div'}} nao é? {{cocoroni}} - {{$value}}

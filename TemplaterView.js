@@ -36,7 +36,8 @@
 		this.childViews;
 		this.dataBindings = {
 			$allElements: null,
-			textnodes: null
+			textnodes: null,
+			elementAttributes: null
 		};
 		
 		initialize.apply(this, []);
@@ -163,9 +164,20 @@
 		$.each(this.dataBindings.textnodes, function(i, item) {
 			var result = item.originalText;
 			$.each(item.matches, function(i, match) {
-				result = result.replace(match[1], match.expression(data))
+				result = result.replace(match[1], match.expression(data));
 			});
 			item.el.nodeValue = result;
+		});
+
+		// element with attributes
+		$.each(this.dataBindings.elementAttributes, function(i, item) {
+			$.each(item.attributes, function(attr_name, attr) {
+				var result = attr.originalText;
+				$.each(attr.matches, function(i, match) {
+					result = result.replace(match[1], match.expression(data));
+				});
+				item.el.attr(attr_name, result);
+			});
 		});
 	}
 
@@ -178,6 +190,11 @@
 		this.dataBindings.textnodes = $.map(templater.dataBindings.textnodes, function(item) {
 			return $.extend(true, {}, item, {
 				el: self.dataBindings.$allElements[item.indexOf]
+			});
+		});
+		this.dataBindings.elementAttributes = $.map(templater.dataBindings.elementAttributes, function(item) {
+			return $.extend(true, {}, item, {
+				el: self.dataBindings.$allElements.eq(item.indexOf)
 			});
 		});
 	}

@@ -64,7 +64,8 @@
 		this.directives;
 		this.dataBindings = {
 			$allElements: null,
-			textnodes: null
+			textnodes: null,
+			elementAttributes: null
 		};
 	}
 
@@ -202,13 +203,14 @@
 
 		this.dataBindings.$allElements = all_elements;
 		this.dataBindings.textnodes = filterTextNodesWithBind(all_elements);
+		this.dataBindings.elementAttributes = filterElementsAttributeValuesWithBind(all_elements);
 	}
 
 	function filterTextNodesWithBind($elements) {
+		var bound = [];
 		var textnodes = $.grep($elements, function(el) {
 			return (el.nodeType == 3);
 		});
-		var bound = [];
 
 		$.each(textnodes, function(i, textnode) {
 			var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
@@ -231,13 +233,66 @@
 		return bound;
 	}
 
+	function filterElementsAttributeValuesWithBind($elements) {
+		var bound = [];
+		var elements = $.map($elements, function(el) {
+			let attrs = el.attributes;
+			if (!attrs) return;
+
+			return {
+				el: el,
+				attributes: attrs,
+				indexOf: $elements.index(el)
+			};
+		});
+
+		$.each(elements, function(i, element) {
+			var attributes = {};
+			$.each(element.attributes, function(j, attr) {
+				var attr_name = attr.nodeName;
+				var attr_value = attr.nodeValue;
+				var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
+				var m;
+				var matches = [];
+
+				while (m = regexp.exec(attr_value)) {
+					matches.push(m);
+				}
+				if (!matches.length) return;
+				
+				attributes[attr_name] = {
+					originalText: attr_value,
+					matches: matches
+				};
+			});
+			if ($.isEmptyObject(attributes)) return;
+
+			bound.push({
+				el: element.el,
+				indexOf: element.indexOf,
+				attributes: attributes
+			});
+		});
+
+		return bound;
+	}
+
 	function initializeDataBindings() {
 		var self = this;
 		var textnodes = this.dataBindings.textnodes;
+		var element_attributes = this.dataBindings.elementAttributes;
 
 		$.each(textnodes, function(i, item) {
 			$.each(item.matches, function(i, match) {
 				match.expression = prepare_expression(match[2]);
+			});
+		});
+
+		$.each(element_attributes, function(i, element) {
+			$.each(element.attributes, function(name, item) {
+				$.each(item.matches, function(i, match) {
+					match.expression = prepare_expression(match[2]);
+				});
 			});
 		});
 	}
