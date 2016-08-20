@@ -3,13 +3,28 @@
 		padding: 10px;
 		border: {{styles.border}};
 	}
+	.foo {
+		padding: 0px;
+		font-size: 10px;
+		margin: 0px;
+		width: 20px;
+		height: 15px;
+		line-height: 15px;
+		float: left;
+		overflow: hidden;
+	}
 </style>
 
 <h1 style="display: inline">Template test</h1> change cocoroni: <input type="text" style="background: {{styles.color}}" value="{{cocoroni}}" class="myclass" />
 <br clear="all">
 cocoroni value: <b>{{cocoroni}}</b><br>
 {{ 'simple string var' }} - <u>{{ '**' + meca + '**' }}</u>
+<br clear="all">
 
-<div repeat="repeater">
+<div repeat="{{repeater}}">
 	$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de div'}} nao é? {{cocoroni}} - {{$value}}
 </div>
+<!-- 
+<div repeat="repeater" class="foo" style="background: {{styles.color}};">
+	{{$index}}
+</div> -->

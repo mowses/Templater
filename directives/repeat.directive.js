@@ -41,6 +41,14 @@
 		var views = [];
 		var data = view_instance.model.getData(false);
 		var expression = params.attributeValue;
+		
+		// parse expressions on params
+		// we can bound both "{{varname}}" or just "varname"
+		$.each(params.expressions, function(i, item) {
+			var ret = item.run_expression(data);
+			expression = expression.replace(item[0], JSON.stringify(ret));
+		});
+
 		var run_expression = prepare_expression(expression);
 		var ret = run_expression(data);
 		var templater = view_instance.__internal__.templater;

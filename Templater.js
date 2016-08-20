@@ -134,8 +134,15 @@
 			let html = matches[0].html;
 			let template = new Templater();
 
-			// dont need matches html anymore
 			$.each(matches, function(i, match) {
+				// attribute value may have expressions
+				// so we create run_expression
+				match.expressions = getExpressionsFrom(match.attributeValue);
+				$.each(match.expressions, function(i, match) {
+					match.run_expression = prepare_expression(match[2]);
+				});
+
+				// dont need matches html anymore
 				delete match.html;
 			});
 
@@ -213,13 +220,8 @@
 		});
 
 		$.each(textnodes, function(i, textnode) {
-			var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
-			var m;
-			var matches = [];
+			var matches = getExpressionsFrom(textnode.nodeValue);
 
-			while (m = regexp.exec(textnode.nodeValue)) {
-				matches.push(m);
-			}
 			if (!matches.length) return;
 
 			bound.push({
@@ -251,13 +253,8 @@
 			$.each(element.attributes, function(j, attr) {
 				var attr_name = attr.nodeName;
 				var attr_value = attr.nodeValue;
-				var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
-				var m;
-				var matches = [];
+				var matches = getExpressionsFrom(attr_value);
 
-				while (m = regexp.exec(attr_value)) {
-					matches.push(m);
-				}
 				if (!matches.length) return;
 				
 				attributes[attr_name] = {
@@ -295,6 +292,18 @@
 				});
 			});
 		});
+	}
+
+	function getExpressionsFrom(value) {
+		var regexp = new RegExp(TemplaterView.Config.dataBindingExpression, 'gi');
+		var matches = [];
+		var m;
+
+		while (m = regexp.exec(value)) {
+			matches.push(m);
+		}
+
+		return matches;
 	}
 
 	function groupBy(array, f) {
