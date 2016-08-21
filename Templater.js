@@ -1,4 +1,4 @@
-(function($, TemplaterRepeatDirective, TemplaterService, TemplaterView) {
+(function($, TemplaterService, TemplaterView) {
 	"use strict";
 
 	var loading_templates = {};
@@ -6,10 +6,17 @@
 
 	$.extend(Templater, {
 		Config: {
-			builtInDirectives: [{
-				selector: '[repeat]',
-				'class': TemplaterRepeatDirective
-			}]
+			builtInDirectives: [],
+			customDirectives: []
+		},
+
+		Directive: {
+			extend: function(definition) {
+				registerDirective({
+					selector: definition.name + ',[' + definition.name + ']',
+					definition: definition
+				});
+			}
 		},
 
 		loadView: function(url, callback) {
@@ -54,7 +61,7 @@
 	function Templater() {
 		
 		this.__internal__ = {
-			registered_directives: $.merge([], Templater.Config.builtInDirectives),
+			registered_directives: $.merge($.merge([], Templater.Config.builtInDirectives), Templater.Config.customDirectives),
 			parent: undefined,
 			subtemplates: undefined
 		}
@@ -319,6 +326,13 @@
 		})
 	}
 
+	function registerDirective(data) {
+		Templater.Config.customDirectives.push({
+			selector: data.selector,
+			definition: data.definition
+		});
+	}
+
 	function prepare_expression(expression) {
 		var fn = new Function("obj",
 			"var e;" +
@@ -349,4 +363,4 @@
 
 	return Templater;
 
-})(jQuery, TemplaterRepeatDirective, TemplaterService, TemplaterView);
+})(jQuery, TemplaterService, TemplaterView);

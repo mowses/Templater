@@ -31,8 +31,8 @@
 				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
 				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else if (selector.tag && !selector.attribute) {
-				//regex_greedy = new RegExp('<(' + selector.tag + '+)(())[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
-				//regex_lazy = new RegExp('<(' + selector.tag + '+)(())[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
+				regex_greedy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
+				regex_lazy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else {
 				return matches;
 			}

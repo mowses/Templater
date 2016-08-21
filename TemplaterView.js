@@ -1,4 +1,4 @@
-(function($, ObserverCore, Events) {
+(function($, ObserverCore, Events, TemplaterDirective) {
 	"use strict";
 
 	/**
@@ -142,17 +142,21 @@
 		var self = this;
 		
 		$.each(self.__internal__.templater.directives, function(i, item) {
-			var directive_instance = new item.directive.class(item, self);
-			directive_instance.events.on('ready', function(views) {
-				$.each(views, function(i, view) {
-					setParentView.apply(view, [self]);
-					view.render(placeholder.$el);
+			var directive_instance = createDirectiveForDefinition(item.directive.definition, item, self);
+			var views = directive_instance.execute();
 
-				});
-				self.childViews = views;
+			$.each(views, function(i, view) {
+				setParentView.apply(view, [self]);
+				view.render(placeholder.$el);
 			});
-			directive_instance.execute();
+			self.childViews = views;
 		});
+	}
+
+	function createDirectiveForDefinition(definition, item, view) {
+		var directive = new TemplaterDirective(view);
+		$.extend(directive, definition);
+		return directive;
 	}
 
 	function doDataBindings() {
@@ -237,4 +241,4 @@
 
 	return TemplaterView;
 
-})(jQuery, ObserverCore, Events);
+})(jQuery, ObserverCore, Events, TemplaterDirective);
