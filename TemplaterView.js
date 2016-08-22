@@ -218,7 +218,7 @@
 		var self = this;
 		
 		function setProto() {
-			self.model.getData(false).__proto__ = parent.model.getData(false);
+			self.model.setProto(parent.model);
 			self.events.trigger('changed model __proto__');
 		}
 
