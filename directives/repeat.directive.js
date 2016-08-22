@@ -34,7 +34,7 @@
 	function createOrUpdateChildViews() {
 		var self = this;
 		var view_instance = this.view;
-		var params = this.getAttributes();
+		var params = this.parseAttributes('repeat');
 		var views = [];
 		var templater = view_instance.__internal__.templater;
 		var $index = 0;

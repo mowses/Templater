@@ -9,7 +9,7 @@
 			var view = this.view;
 			
 			view.$element.on('click', function() {
-				var attributes = self.getAttributes();
+				var attributes = self.parseAttributes(['on-click']);
 			});
 			
 			return [view];

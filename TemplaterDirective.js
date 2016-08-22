@@ -6,8 +6,9 @@
 			return this.onInit();
 		},
 
-		getAttributes: function() {
-			var attributes = getAttributes.apply(this, []);
+		parseAttributes: function(only_attrs) {
+			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
+			var attributes = getAttributes.apply(this, [only_attrs]);
 			var result_attributes = {};
 			var data = this.view.model.getData(false);
 
@@ -44,7 +45,7 @@
 		
 	}
 
-	function getAttributes() {
+	function getAttributes(only_attrs) {
 		var el = this.view.$element[0];
 		var attrs = el.attributes;
 		var directive_name = this.name;
@@ -58,6 +59,7 @@
 		
 		// add databindings vars into mine_attributes
 		mine_attributes = $.map(mine_attributes, function(item) {
+			if (only_attrs && $.inArray(item.nodeName, only_attrs) == -1) return;
 			return $.extend({
 				nodeName: item.nodeName,
 				originalText: item.nodeValue
