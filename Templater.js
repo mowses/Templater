@@ -187,7 +187,7 @@
 			var inner = false;
 
 			$.each(found, function(i2, item2) {
-				if (inner || i === i2) return false;
+				if (inner) return false;
 				inner = item2.html.indexOf(item.html) > 0;
 			});
 

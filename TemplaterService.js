@@ -17,7 +17,6 @@
 			var matches = [];
 			var regex_greedy;
 			var regex_lazy;
-			var m;
 			
 			// IMPORTANT: all regex were replaced its lazy by greedy method
 			// meaning that will match the farwest closing tag (the last one)
@@ -28,23 +27,25 @@
 				//regex_greedy = new RegExp('<(' + selector.tag + ')[\\s]+(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
 				//regex_lazy = new RegExp('<(' + selector.tag + ')[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else if (!selector.tag && selector.attribute) {
-				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
-				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
+				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>([\\s\\S]*)<\\/\\1>', 'gi');
+				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>([\\s\\S]*?)<\\/\\1>', 'gi');
+				$.each(getMatches(html, regex_greedy, regex_lazy), function(i, m) {
+					matches.push([
+						m[0],  // html
+						m[1],  // tagname
+						selector.attribute,
+						m[11],  // attribute value
+						m[12]  // element content
+					]);
+				});
 			} else if (selector.tag && !selector.attribute) {
 				regex_greedy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
 				regex_lazy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
+				matches = getMatches(html, regex_greedy, regex_lazy);
 			} else {
 				return matches;
 			}
-
-			while (m = regex_greedy.exec(html)) {
-				m = fixGreedyRegex(m, regex_lazy);
-				html = html.replace(m[0], '');
-				// reset regex internal index search
-				regex_greedy.lastIndex = 0;
-				matches.push(m);
-			}
-
+			
 			matches = $.map(matches, function(item) {
 				return {
 					html: item[0],
@@ -123,6 +124,21 @@
 		});
 		
 		return m2;
+	}
+
+	function getMatches(html, regex_greedy, regex_lazy) {
+		var m;
+		var matches = [];
+
+		while (m = regex_greedy.exec(html)) {
+			m = fixGreedyRegex(m, regex_lazy);
+			html = html.replace(m[0], '');
+			// reset regex internal index search
+			regex_greedy.lastIndex = 0;
+			matches.push(m);
+		}
+
+		return matches;
 	}
 
 

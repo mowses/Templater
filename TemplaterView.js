@@ -45,19 +45,28 @@
 	
 	$.extend(TemplaterView.prototype, {
 		render: function($element) {
+			let parent = this.__internal__.parentView;
+			//if (parent) return;
+
 			var self = this;
 
+			this.$element.appendTo($element);
+			this.model.apply();
+			
 			// create and append views for placeholders
 			let templater_instance = this.__internal__.templater;
 			$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 				let placeholder = self.placeholders[i];
 				let base_view = placeholder.baseView;
 				
-				repeaterViews.apply(base_view, [placeholder]);
+				repeaterViews.apply(base_view, []);
+
+				$.each(base_view.childViews, function(i, view) {
+					view.render(placeholder.$el);
+				});
 			});
 
 			this.events.trigger('render');
-			this.$element.appendTo($element);
 		},
 
 		destroy: function() {
@@ -85,12 +94,12 @@
 		// because its intended to run for baseView
 		// since baseView never gets rendered
 		// unfortunaly, the event will run for all other view instances too
-		.on('changed model __proto__.baseView', function() {
+		/*.on('changed model __proto__.baseView', function() {
 			// update child views
 			$.each(self.childViews, function(i, childview) {
 				doDataBindings.apply(childview, []);
 			});
-		})
+		})*/
 		.once('render', function() {
 			var timeout = new Timeout();
 
@@ -138,7 +147,7 @@
 		}
 	}
 
-	function repeaterViews(placeholder) {
+	function repeaterViews() {
 		var self = this;
 		
 		$.each(self.__internal__.templater.directives, function(i, item) {
@@ -147,7 +156,6 @@
 
 			$.each(views, function(i, view) {
 				setParentView.apply(view, [self]);
-				view.render(placeholder.$el);
 			});
 			self.childViews = views;
 		});
