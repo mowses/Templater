@@ -11,8 +11,6 @@
 			view.$element.on('click', function() {
 				var attributes = self.parseAttributes(['on-click']);
 			});
-			
-			return [view];
 		}
 	});
 

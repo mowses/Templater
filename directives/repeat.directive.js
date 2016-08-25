@@ -4,10 +4,10 @@
 	Templater.Directive.extend({
 		name: 'repeat',
 
-		onInit: function() {
+		getViews: function() {
 			var self = this;
 
-			this.view.events.on(['changed model', 'changed model __proto__'], $.proxy(create_or_update_views, this));
+			//this.view.events.on(['changed model', 'changed model __proto__'], $.proxy(create_or_update_views, this));
 			return create_or_update_views.apply(this, []);
 		}
 	});

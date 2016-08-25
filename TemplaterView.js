@@ -62,6 +62,11 @@
 				repeaterViews.apply(base_view, []);
 
 				$.each(base_view.childViews, function(i, view) {
+					// initialize directives for childViews
+					$.each(instance.directives, function(i, item) {
+						var directive_instance = createDirectiveForDefinition(item.directive.definition, view);
+						directive_instance.onInit();
+					});
 					view.render(placeholder.$el);
 				});
 			});
@@ -147,21 +152,40 @@
 		}
 	}
 
+	/**
+	 * directives could return view(s) on createViews method
+	 * if it return a view different than the initial_view
+	 * then add it to views array and use it as child view
+	 * if there are no new views created by directives then use initial_view
+	 */
 	function repeaterViews() {
 		var self = this;
-		
-		$.each(self.__internal__.templater.directives, function(i, item) {
-			var directive_instance = createDirectiveForDefinition(item.directive.definition, item, self);
-			var views = directive_instance.execute();
+		var templater = self.__internal__.templater;
+		var views = [];
+		var initial_view = templater.generateView();
+		setParentView.apply(initial_view, [self]);
 
+		$.each(templater.directives, function(i, item) {
+			var directive_instance = createDirectiveForDefinition(item.directive.definition, initial_view);
+			var _views = directive_instance.createViews();
+			
+			if (_views && _views != initial_view) {
+				$.merge(views, $.makeArray(_views));
+			}
+		});
+
+		if (views.length) {
 			$.each(views, function(i, view) {
 				setParentView.apply(view, [self]);
 			});
-			self.childViews = views;
-		});
+		}
+
+		self.childViews = views;
+
+		return views;
 	}
 
-	function createDirectiveForDefinition(definition, item, view) {
+	function createDirectiveForDefinition(definition, view) {
 		var directive = new TemplaterDirective(view);
 		$.extend(directive, definition);
 		return directive;

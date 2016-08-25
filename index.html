@@ -36,6 +36,7 @@
 		<script src="./TemplaterService.js"></script>
 		<script src="./Templater.js"></script>
 		<script src="./directives/repeat.directive.js"></script>
+		<script src="./directives/on-click.directive.js"></script>
 		<script>
 			$(function() {
 				/*Templater.Config.customDirectives.push({
@@ -52,6 +53,11 @@
 						styles: {
 							color: 'red',
 							border: '2px solid black'
+						}
+					});
+					view.model.setProto({
+						clicked: function(param) {
+							console.log('clicked event run. param:', param);
 						}
 					});
 					view.model.apply();

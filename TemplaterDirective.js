@@ -2,8 +2,8 @@
 	"use strict";
 
 	$.extend(TemplaterDirective.prototype, {
-		execute: function() {
-			return this.onInit();
+		createViews: function() {
+			return this.getViews();
 		},
 
 		parseAttributes: function(only_attrs) {
@@ -33,7 +33,19 @@
 			});
 			
 			return result_attributes;
-		}
+		},
+
+		/**
+		 * may your directive definition implement this
+		 * if its a directive like repeater
+		 * should return an array of generated views,
+		 */
+		getViews: function() {},
+		/**
+		 * onInit method
+		 * implement it on your diretive definition
+		 */
+		onInit: function() {}
 	});
 
 	function TemplaterDirective(view) {
