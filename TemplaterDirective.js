@@ -2,10 +2,6 @@
 	"use strict";
 
 	$.extend(TemplaterDirective.prototype, {
-		createViews: function() {
-			return this.getViews();
-		},
-
 		parseAttributes: function(only_attrs) {
 			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
 			var attributes = getAttributes.apply(this, [only_attrs]);

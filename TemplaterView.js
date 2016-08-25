@@ -153,31 +153,32 @@
 	}
 
 	/**
-	 * directives could return view(s) on createViews method
-	 * if it return a view different than the initial_view
-	 * then add it to views array and use it as child view
-	 * if there are no new views created by directives then use initial_view
+	 * directives could return view(s) on getViews method
+	 * first check if there are any directive that has getViews method
+	 * if so, then it would return a list of child views
 	 */
 	function repeaterViews() {
 		var self = this;
 		var templater = self.__internal__.templater;
 		var views = [];
 		var initial_view = templater.generateView();
-		setParentView.apply(initial_view, [self]);
-
-		$.each(templater.directives, function(i, item) {
-			var directive_instance = createDirectiveForDefinition(item.directive.definition, initial_view);
-			var _views = directive_instance.createViews();
-			
-			if (_views && _views != initial_view) {
-				$.merge(views, $.makeArray(_views));
-			}
+		var getViews = $.grep(templater.directives, function(item) {
+			if (item.directive.definition.getViews) return true;
 		});
+		setParentView.apply(initial_view, [self]);
+		
+		if (getViews.length) {
+			$.each(getViews, function(i, item) {
+				var directive_instance = createDirectiveForDefinition(item.directive.definition, initial_view);
+				var _views = $.makeArray(directive_instance.getViews());
 
-		if (views.length) {
-			$.each(views, function(i, view) {
-				setParentView.apply(view, [self]);
+				$.each(_views, function(i, view) {
+					setParentView.apply(view, [self]);
+					views.push(view);
+				});
 			});
+		} else {
+			views = [initial_view];
 		}
 
 		self.childViews = views;
