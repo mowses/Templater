@@ -37,6 +37,7 @@
 		<script src="./Templater.js"></script>
 		<script src="./directives/repeat.directive.js"></script>
 		<script src="./directives/on-click.directive.js"></script>
+		<script src="./directives/on-mousedown.directive.js"></script>
 		<script>
 			$(function() {
 				/*Templater.Config.customDirectives.push({
@@ -58,6 +59,10 @@
 					view.model.setProto({
 						clicked: function(param) {
 							console.log('clicked event run. param:', param);
+						},
+
+						mousedown: function(param) {
+							console.log('mousedown event run. param:', param);
 						}
 					});
 					view.model.apply();
