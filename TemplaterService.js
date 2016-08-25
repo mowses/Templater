@@ -38,6 +38,20 @@
 						m[12]  // element content
 					]);
 				});
+
+				// now get matches for elements with no closing tags
+				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>(?!([\\s\\S]*)<\\/\\1>)', 'gi');
+				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>(?!([\\s\\S]*?)<\\/\\1>)', 'gi');
+				$.each(getMatches(html, regex_greedy, regex_lazy), function(i, m) {
+					matches.push([
+						m[0],  // html
+						m[1],  // tagname
+						selector.attribute,
+						m[11],  // attribute value
+						undefined  // element content
+					]);
+				});
+
 			} else if (selector.tag && !selector.attribute) {
 				regex_greedy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');
 				regex_lazy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
