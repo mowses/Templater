@@ -44,8 +44,9 @@
 		onInit: function() {}
 	});
 
-	function TemplaterDirective(view) {
+	function TemplaterDirective(view, base_view) {
 		this.view = view;
+		this.baseView = base_view;
 		constructor.apply(this, []);
 	}
 

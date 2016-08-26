@@ -17,6 +17,8 @@
 			var matches = [];
 			var regex_greedy;
 			var regex_lazy;
+			var replaced_html = html;
+			var m;
 			
 			// IMPORTANT: all regex were replaced its lazy by greedy method
 			// meaning that will match the farwest closing tag (the last one)
@@ -40,9 +42,15 @@
 				});
 
 				// now get matches for elements with no closing tags
-				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>(?!([\\s\\S]*)<\\/\\1>)', 'gi');
+				// the problem is that it would return results that have previously
+				// matched. the solution is to replace all previous matches from html
+				$.each(matches, function(i, match) {
+					replaced_html = replaced_html.replace(match[0], '');
+				});
+				// we are just looking for tags with no closing tag
+				// no need to call getMatches, instead we just capture each match
 				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>(?!([\\s\\S]*?)<\\/\\1>)', 'gi');
-				$.each(getMatches(html, regex_greedy, regex_lazy), function(i, m) {
+				while (m = regex_lazy.exec(replaced_html)) {
 					matches.push([
 						m[0],  // html
 						m[1],  // tagname
@@ -50,7 +58,7 @@
 						m[11],  // attribute value
 						undefined  // element content
 					]);
-				});
+				}
 
 			} else if (selector.tag && !selector.attribute) {
 				regex_greedy = new RegExp('<(' + selector.tag + '+)[^>]*>([\\s\\S]*)<\\/\\1>', 'gi');

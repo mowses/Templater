@@ -33,6 +33,7 @@
 		]);
 		this.$element;
 		this.placeholders = [];
+		this.directives;
 		this.childViews;
 		this.dataBindings = {
 			$allElements: null,
@@ -49,27 +50,31 @@
 			//if (parent) return;
 
 			var self = this;
-
+			
 			this.$element.appendTo($element);
 			this.model.apply();
+
+			repeaterViews.apply(self, []);
 			
-			// create and append views for placeholders
+			
+			/*// create and append views for placeholders
 			let templater_instance = this.__internal__.templater;
 			$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
 				let placeholder = self.placeholders[i];
 				let base_view = placeholder.baseView;
 				
-				repeaterViews.apply(base_view, []);
+				base_view.childViews = repeaterViews.apply(base_view, []);
 
 				$.each(base_view.childViews, function(i, view) {
+					setParentView.apply(view, [self]);
 					// initialize directives for childViews
 					$.each(instance.directives, function(i, item) {
-						var directive_instance = createDirectiveForDefinition(item.directive.definition, view);
+						var directive_instance = createDirectiveForDefinition(item.directive.definition, view, base_view);
 						directive_instance.onInit();
 					});
 					view.render(placeholder.$el);
 				});
-			});
+			});*/
 
 			this.events.trigger('render');
 		},
@@ -88,6 +93,10 @@
 		var self = this;
 		var templater_instance = this.__internal__.templater;
 		var selector = 'templater-placeholder#children-';
+		var directives = templater_instance.directives;
+		var directives_return_views = $.grep(templater_instance.directives||[], function(item) {
+			if (item.directive.definition.getViews) return true;
+		});
 		
 		this.__internal__.id = TemplaterView.generateID();
 
@@ -110,10 +119,27 @@
 
 			self.events
 			.on(['changed model.refresh-view', 'changed model __proto__'], timeout.wait(function() {
+				repeaterViews.apply(self, []);
 				doDataBindings.apply(self, []);
+
+				// update views in baseView
+				$.each(self.placeholders, function(i, item) {
+					item.baseView.events.trigger('changed model.baseView');
+				});
 			}));
 			doDataBindings.apply(self, []);
 		});
+
+		// instantiate directives for this view
+		if (directives_return_views.length) {
+			this.directives = $.map(directives_return_views, function(item) {
+				return createDirectiveForDefinition(item.directive.definition, self, self);
+			});
+
+			/*this.events.on('changed model', function() {
+				appendChildViews.apply(self, []);
+			});*/
+		}
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
@@ -125,12 +151,14 @@
 			let selector_id = selector + i;
 			let $placeholder = self.$element.find(selector_id);
 			let base_view = instance.generateView();
-			/*base_view.model.watch(null, function() {
-				// update child views
-				$.each(base_view.childViews, function(i, childview) {
-					doDataBindings.apply(childview, []);
+
+			base_view.events.on('changed model.baseView', $.proxy(function() {
+				var base_view = this;
+				$.each(base_view.childViews, function(i, item) {
+					item.events.trigger('changed model.refresh-view');
 				});
-			});*/
+			}, base_view));
+			
 			setParentView.apply(base_view, [self]);
 			
 			self.placeholders[i] = {
@@ -152,42 +180,41 @@
 		}
 	}
 
-	/**
-	 * directives could return view(s) on getViews method
-	 * first check if there are any directive that has getViews method
-	 * if so, then it would return a list of child views
-	 */
 	function repeaterViews() {
 		var self = this;
-		var templater = self.__internal__.templater;
-		var views = [];
-		var initial_view = templater.generateView();
-		var getViews = $.grep(templater.directives, function(item) {
-			if (item.directive.definition.getViews) return true;
-		});
-		setParentView.apply(initial_view, [self]);
-		
-		if (getViews.length) {
-			$.each(getViews, function(i, item) {
-				var directive_instance = createDirectiveForDefinition(item.directive.definition, initial_view);
-				var _views = $.makeArray(directive_instance.getViews());
 
-				$.each(_views, function(i, view) {
-					setParentView.apply(view, [self]);
-					views.push(view);
-				});
+		$.each(this.placeholders, function(i, placeholder) {
+			let base_view = placeholder.baseView;
+			var views = [];
+
+			$.each(base_view.directives, function(i, item) {
+				$.merge(views, item.getViews());
 			});
-		} else {
-			views = [initial_view];
-		}
 
-		self.childViews = views;
+			$.each(views, function(i, view) {
+				setParentView.apply(view, [self]);
+				// initialize directives for childViews
+				/*$.each(instance.directives, function(i, item) {
+					var directive_instance = createDirectiveForDefinition(item.directive.definition, view, base_view);
+					directive_instance.onInit();
+				});
+				*/view.render(placeholder.$el);
+			});
 
-		return views;
+			base_view.childViews = views
+		});
+		
+		/*$.each(views, function(i, view) {
+			setParentView.apply(view, self);
+			view.render(placeholder);
+		});
+
+		//console.log(views);
+		self.childViews = views;*/
 	}
 
-	function createDirectiveForDefinition(definition, view) {
-		var directive = new TemplaterDirective(view);
+	function createDirectiveForDefinition(definition, view, base_view) {
+		var directive = new TemplaterDirective(view, base_view);
 		$.extend(directive, definition);
 		return directive;
 	}
