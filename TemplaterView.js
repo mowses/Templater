@@ -121,6 +121,9 @@
 			let repeatable_directives = $.grep(instance.directives, function(item) {
 				return item.directive.definition.getViews;
 			});
+			// will use scope_view when no repeatable area
+			// but will instantiate a new scope_view for every repeater, for every placeholder,
+			// so, quantity of scope_view = (1 * repeater) + 1
 			var scope_view = instance.generateView();
 			setParentView.apply(scope_view, [self]);
 
