@@ -31,10 +31,10 @@
 
 	function createOrUpdateViews() {
 		var self = this;
-		var base_view = this.baseView;
+		var view = this.view;
 		var params = this.parseAttributes('repeat');
 		var views = [];
-		var templater = base_view.__internal__.templater;
+		var templater = view.__internal__.templater;
 		var $index = 0;
 		// repeat-as attribute: $value,$key,$index
 		/*var repeat_as = (view_instance.$element.attr('repeat-as')||'').split(',');
