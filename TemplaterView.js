@@ -243,25 +243,26 @@
 	function doDataBindings() {
 		var self = this;
 		var data = this.model.getData(false);
+		var templater = this.__internal__.templater;
 		//var parent = self.__internal__.parentView;
 		
 		// textnodes
-		$.each(this.dataBindings.textnodes, function(i, item) {
+		$.each(templater.dataBindings.textnodes, function(i, item) {
 			var result = item.originalText;
 			$.each(item.matches, function(i, match) {
 				result = result.replace(match[1], match.expression(data));
 			});
-			item.el.nodeValue = result;
+			self.dataBindings.textnodes.get(i).nodeValue = result;
 		});
 
 		// element with attributes
-		$.each(this.dataBindings.elementAttributes, function(i, item) {
+		$.each(templater.dataBindings.elementAttributes, function(i, item) {
 			$.each(item.attributes, function(attr_name, attr) {
 				var result = attr.originalText;
 				$.each(attr.matches, function(i, match) {
 					result = result.replace(match[1], match.expression(data));
 				});
-				item.el.attr(attr_name, result);
+				self.dataBindings.elementAttributes.eq(i).attr(attr_name, result);
 			});
 		});
 	}
@@ -272,16 +273,12 @@
 		
 		// $allElements MUST match its templater dataBindings.$allElements
 		this.dataBindings.$allElements = Templater.getAllElements(this.$element);
-		this.dataBindings.textnodes = $.map(templater.dataBindings.textnodes, function(item) {
-			return $.extend(true, {}, item, {
-				el: self.dataBindings.$allElements[item.indexOf]
-			});
-		});
-		this.dataBindings.elementAttributes = $.map(templater.dataBindings.elementAttributes, function(item) {
-			return $.extend(true, {}, item, {
-				el: self.dataBindings.$allElements.eq(item.indexOf)
-			});
-		});
+		this.dataBindings.textnodes = $($.map(templater.dataBindings.textnodes, function(item) {
+			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
+		}));
+		this.dataBindings.elementAttributes = $($.map(templater.dataBindings.elementAttributes, function(item) {
+			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
+		}));
 	}
 
 	function setParentView(parent) {
