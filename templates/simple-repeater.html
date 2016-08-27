@@ -13,6 +13,18 @@
 		float: left;
 		overflow: hidden;
 	}
+
+	my-element {
+		border: 1px solid black;
+		padding: 10px;
+		background: red;
+	}
+
+	content {
+		border: 1px solid orange;
+		background: yellow;
+		padding: 5px;
+	}
 </style>
 
 <h1 style="display: inline">Template test</h1> change cocoroni: <input type="text" style="background: {{styles.color}}" value="{{cocoroni}}" class="myclass" on-click="clicked(33, $event)" />
@@ -20,7 +32,7 @@
 <br clear="all">
 
 cocoroni value: <b>{{cocoroni}}</b><br>
-{{ 'simple string var' }} - <u>{{ '**' + meca + '**' }}</u>
+{{ 'simple string var' }} - <u>{{ '**' + meca + '**' }}</u> - <my-element on-click="clicked(99, $event)">this is <b>my-element</b> tag</my-element><br>
 
 <br clear="all">
 

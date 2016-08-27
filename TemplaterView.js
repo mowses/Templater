@@ -45,7 +45,7 @@
 	
 	$.extend(TemplaterView.prototype, {
 		render: function($element) {
-			this.model.apply();
+			//this.model.apply();
 			this.$element.appendTo($element);
 			this.events.trigger('render');
 		},
