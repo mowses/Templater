@@ -64,10 +64,6 @@
 		var self = this;
 		var templater_instance = this.__internal__.templater;
 		var selector = 'templater-placeholder#children-';
-		/*var directives = templater_instance.directives;
-		var directives_return_views = $.grep(templater_instance.directives||[], function(item) {
-			if (item.directive.definition.getViews) return true;
-		});*/
 		
 		this.__internal__.id = TemplaterView.generateID();
 
@@ -83,30 +79,10 @@
 			.on(['changed model.refresh-view', 'changed model __proto__'], timeout.wait(function() {
 				repeaterViews.apply(self, []);
 				doDataBindings.apply(self, []);
-
-				/*// update views in baseView
-				$.each(self.placeholders, function(i, item) {
-					item.baseView.events.trigger('changed model.baseView');
-				});*/
 			}));
 			repeaterViews.apply(self, []);
 			doDataBindings.apply(self, []);
 		});
-
-		// instantiate directives for this view
-		/*if (directives_return_views.length) {  // directives that return view from getViews
-			this.directives = $.map(directives_return_views, function(item) {
-				return createDirectiveForDefinition(item.directive.definition, self, self);
-			});
-		} else {
-			this.directives = $.map(templater_instance.directives||[], function(item) {
-				return createDirectiveForDefinition(item.directive.definition, self, self);
-			});
-			// no need to call generateView from templater because
-			// we are going to use the same instance (baseView) as childViews
-			// thats because were not using any directive like repeater
-			this.childViews = [this];
-		}*/
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
@@ -123,11 +99,13 @@
 			var directives = $.grep(instance.directives, function(item) {
 				return item.directive.definition.getViews;
 			}, true);
-			// no more baseView for repeater nor directive
+			// obs: no more baseView for repeater nor directive
+			// will create new instances of TemplateView only when needed: for each repeater and one for non repeatable
 			var get_views;
 			var scope_view;
 			
 			if (!repeatable_directives.length) {
+				// non repeatable
 				scope_view = instance.generateView();
 				setParentView.apply(scope_view, [self]);
 
@@ -159,10 +137,11 @@
 
 						$.each(_views, function(i, view) {
 							// do these operations once
-							// and ony when adding for the first time to array
+							// and only when adding for the first time to array
 							if ($.inArray(view, views) == -1) {
 								setParentView.apply(view, [self]);
-								// initialize directives
+								
+								// initialize all directives except the ones with getView method
 								$.each(directives, function(i, item) {
 									var directive = createDirectiveForDefinition(item.directive.definition, instance, view);
 									directive.onInit();
@@ -205,33 +184,6 @@
 				view.render(placeholder.$el);
 			});
 		});
-
-		/*$.each(this.placeholders, function(i, placeholder) {
-			let base_view = placeholder.baseView;
-			var views = base_view.childViews;
-
-			// childViews could be the same as baseView
-			// because baseView has not a directive with getViews
-			if (!views || view && views[0] !== base_view) {
-				views = [];
-				$.each(base_view.directives, function(i, item) {
-					$.merge(views, item.getViews());
-				});
-				$.each(views, function(i, view) {
-					setParentView.apply(view, [self]);
-				});
-			}
-
-			$.each(views, function(i, view) {
-				// initialize directives for childViews
-				$.each(view.directives, function(i, directive) {
-					directive.onInit();
-				});
-				view.render(placeholder.$el);
-			});
-
-			base_view.childViews = views
-		});*/
 	}
 
 	function createDirectiveForDefinition(definition, templater, view) {
@@ -283,7 +235,7 @@
 
 	function setParentView(parent) {
 		if (!(parent instanceof TemplaterView)) return;
-		if (this.__internal__.parentView) return;  // cant change parent
+		if (this.__internal__.parentView) return;  // cant change parent anymore
 
 		var self = this;
 		
