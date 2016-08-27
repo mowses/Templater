@@ -37,22 +37,19 @@
 		 * should return an array of generated views,
 		 */
 		getViews: function() {
-			return this.definition.getViews();
+			return this.definition.getViews.apply(this, []);
 		},
 		/**
 		 * onInit method
 		 * directive onInit now defined in this.definition.onInit
 		 */
 		onInit: function() {
-			return this.definition.onInit();
+			return this.definition.onInit.apply(this, []);
 		}
 	});
 
 	function TemplaterDirective(definition, templater, view) {
 		this.definition = definition;
-		// set definition.__proto__ otherwise, it wont recognize this keyword as being instance of TemplaterDirective
-		definition.__proto__ = this;
-
 		this.templater = templater;
 		this.view = view;
 		this.templateView;
@@ -89,7 +86,7 @@
 	function getAttributes(only_attrs) {
 		var el = this.templater.dataBindings.$allElements[0];
 		var attrs = el.attributes;
-		var directive_name = this.name;
+		var directive_name = this.definition.name;
 		// possible not have databinding in elementAttributes, since it only register
 		// bindings that have '{{...}}'
 		var databindings = $.grep(this.templater.dataBindings.elementAttributes, function(attr) {

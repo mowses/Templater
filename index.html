@@ -45,7 +45,7 @@
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/custom-element.html', function(view) {
+				Templater.loadView('templates/simple-repeater.html', function(view) {
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({
