@@ -8,8 +8,12 @@
 			var self = this;
 			var view = this.view;
 			
-			view.$element.on('mousedown', function() {
-				var attributes = self.parseAttributes(['on-mousedown']);
+			view.$element.on('mousedown', function(event) {
+				if (event.isPropagationStopped()) return;
+
+				var attributes = self.parseAttributes(['on-mousedown'], {
+					$event: event
+				});
 			});
 		}
 	});

@@ -8,8 +8,12 @@
 			var self = this;
 			var view = this.view;
 			
-			view.$element.on('click', function() {
-				var attributes = self.parseAttributes(['on-click']);
+			view.$element.on('click', function(event) {
+				if (event.isPropagationStopped()) return;
+				
+				var attributes = self.parseAttributes(['on-click'], {
+					$event: event
+				});
 			});
 		}
 	});

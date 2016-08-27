@@ -2,11 +2,11 @@
 	"use strict";
 
 	$.extend(TemplaterDirective.prototype, {
-		parseAttributes: function(only_attrs) {
+		parseAttributes: function(only_attrs, extra_data) {
 			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
 			var attributes = getAttributes.apply(this, [only_attrs]);
 			var result_attributes = {};
-			var data = this.view.model.getData(false);
+			var data = $.extend({}, this.view.model.getData(false), extra_data);
 
 			$.each(attributes, function(i, attr) {
 				var expression = attr.originalText;

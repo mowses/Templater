@@ -15,7 +15,7 @@
 	}
 </style>
 
-<h1 style="display: inline">Template test</h1> change cocoroni: <input type="text" style="background: {{styles.color}}" value="{{cocoroni}}" class="myclass" on-click="clicked(33)" />
+<h1 style="display: inline">Template test</h1> change cocoroni: <input type="text" style="background: {{styles.color}}" value="{{cocoroni}}" class="myclass" on-click="clicked(33, $event)" />
 
 <br clear="all">
 
@@ -24,11 +24,11 @@ cocoroni value: <b>{{cocoroni}}</b><br>
 
 <br clear="all">
 
-<div repeat="{{repeater}}" on-click="clicked({{$index}});" on-mousedown="mousedown({{$value}})">
+<div repeat="{{repeater}}" on-click="clicked({{$index}}, $event);" on-mousedown="mousedown({{$value}}, $event)">
 	$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de div'}} nao é? {{cocoroni}} - {{$value}}
 	<hr>
 
-	<div repeat="[99,88,77]" on-click="clicked({{$index}});" on-mousedown="mousedown({{$value}})">
+	<div repeat="[99,88,77]" on-click="clicked({{$index}}, $event);" on-mousedown="mousedown({{$value}}, $event)">
 		$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de repeater'}} nao é? {{cocoroni}} - {{$value}}
 	</div>
 </div>

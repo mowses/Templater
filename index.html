@@ -58,12 +58,14 @@
 						}
 					});
 					view.model.setProto({
-						clicked: function(param) {
-							console.log('clicked event run. param:', param);
+						clicked: function(param, $event) {
+							console.log('clicked event run. param:', param, $event);
+							$event.stopPropagation();
 						},
 
-						mousedown: function(param) {
-							console.log('mousedown event run. param:', param);
+						mousedown: function(param, $event) {
+							console.log('mousedown event run. param:', param, $event);
+							$event.stopPropagation();
 						}
 					});
 					view.model.apply();
