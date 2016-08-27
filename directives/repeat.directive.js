@@ -34,7 +34,7 @@
 		var view = this.view;
 		var params = this.parseAttributes('repeat');
 		var views = [];
-		var templater = view.__internal__.templater;
+		var templater = this.templater;
 		var $index = 0;
 		// repeat-as attribute: $value,$key,$index
 		/*var repeat_as = (view_instance.$element.attr('repeat-as')||'').split(',');
@@ -50,6 +50,7 @@
 				'$key': $key,
 				'$value': $value
 			};
+
 			let view = (childviews && childviews[$index]) || templater.generateView();
 			view.model.extendData(data);
 

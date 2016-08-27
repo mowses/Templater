@@ -18,7 +18,6 @@
 
 	function TemplaterView(templater_instance) {
 		var self = this;
-		
 		this.__internal__ = {
 			id: null,
 			parentView: undefined,
@@ -121,18 +120,25 @@
 			let repeatable_directives = $.grep(instance.directives, function(item) {
 				return item.directive.definition.getViews;
 			});
+			var directives = $.grep(instance.directives, function(item) {
+				return item.directive.definition.getViews;
+			}, true);
 			// will use scope_view when no repeatable area
 			// but will instantiate a new scope_view for every repeater, for every placeholder,
 			// so, quantity of scope_view = (1 * repeater) + 1
-			var scope_view = instance.generateView();
-			setParentView.apply(scope_view, [self]);
-
-			repeatable_directives = $.map(repeatable_directives, function(item) {
-				return createDirectiveForDefinition(item.directive.definition, scope_view, self);
-			});
-			var get_views = $.noop;
+			var get_views;
+			var scope_view;
 			
 			if (!repeatable_directives.length) {
+				scope_view = instance.generateView();
+				setParentView.apply(scope_view, [self]);
+
+				// initialize directives for scope_view
+				$.each(directives, function(i, item) {
+					var directive = createDirectiveForDefinition(item.directive.definition, instance, scope_view);
+					directive.onInit(scope_view);
+				});
+
 			 	get_views = function() {
 			 		return [scope_view];
 			 	};
@@ -140,18 +146,36 @@
 				// view scope
 				// just update the views variable using push, slice, splice, etc...
 				// will update the parent view somewhere else
-				get_views = function() {
+				get_views = (function() {
 					var views = [];
-					
-					$.each(repeatable_directives, function(i, directive) {
-						$.merge(views, directive.getViews());
-					});
-					$.each(views, function(i, view) {
-						setParentView.apply(view, [self]);
+					var _repeatable_directives = $.map(repeatable_directives, function(item) {
+						return createDirectiveForDefinition(item.directive.definition, instance, self);
 					});
 
-					return views;
-				};
+					return function() {
+						var _views = [];
+						
+						$.each(_repeatable_directives, function(i, directive) {
+							$.merge(_views, directive.getViews());
+						});
+
+						$.each(_views, function(i, view) {
+							if ($.inArray(view, views) == -1) {
+								setParentView.apply(view, [self]);
+								// initialize directives
+								$.each(directives, function(i, item) {
+									var directive = createDirectiveForDefinition(item.directive.definition, instance, view);
+									directive.onInit();
+								});
+							}
+							views[i] = view;
+						});
+
+						views.splice(_views.length, views.length);
+
+						return _views;
+					}
+				})();
 			}
 
 			self.placeholders[i] = {
@@ -210,8 +234,8 @@
 		});*/
 	}
 
-	function createDirectiveForDefinition(definition, view, base_view) {
-		var directive = new TemplaterDirective(view, base_view);
+	function createDirectiveForDefinition(definition, templater, view) {
+		var directive = new TemplaterDirective(templater, view);
 		$.extend(directive, definition);
 		return directive;
 	}

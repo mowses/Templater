@@ -44,9 +44,9 @@
 		onInit: function() {}
 	});
 
-	function TemplaterDirective(view, base_view) {
+	function TemplaterDirective(templater, view) {
+		this.templater = templater;
 		this.view = view;
-		this.baseView = base_view;
 		constructor.apply(this, []);
 	}
 
@@ -55,13 +55,10 @@
 	}
 
 	function getAttributes(only_attrs) {
-		var el = this.view.$element[0];
+		var el = this.templater.dataBindings.$allElements[0];
 		var attrs = el.attributes;
 		var directive_name = this.name;
-		var databindings = $.map(this.view.dataBindings.elementAttributes, function(item) {
-			if (item.el[0] !== el) return;
-			return item.attributes;
-		})[0] || {};
+		var databindings = this.templater.dataBindings.elementAttributes[0].attributes;
 		var mine_attributes = $.grep(attrs, function(attr) {
 			return (attr.nodeName.indexOf(directive_name + '-') === 0 || attr.nodeName === directive_name);
 		});
