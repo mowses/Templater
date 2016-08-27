@@ -57,7 +57,9 @@
 			parent.events.remove('changed model.for[' + id + ']');
 
 			this.$element.remove();
-		}
+		},
+
+		setParentView: setParentView
 	});
 
 	function initialize() {
@@ -107,7 +109,7 @@
 			if (!repeatable_directives.length) {
 				// non repeatable
 				scope_view = instance.generateView();
-				setParentView.apply(scope_view, [self]);
+				scope_view.setParentView(self);
 
 				// initialize directives for scope_view
 				$.each(directives, function(i, item) {
@@ -139,7 +141,7 @@
 							// do these operations once
 							// and only when adding for the first time to array
 							if ($.inArray(view, views) == -1) {
-								setParentView.apply(view, [self]);
+								view.setParentView(self);
 								
 								// initialize all directives except the ones with getView method
 								$.each(directives, function(i, item) {
@@ -187,8 +189,7 @@
 	}
 
 	function createDirectiveForDefinition(definition, templater, view) {
-		var directive = new TemplaterDirective(templater, view);
-		$.extend(directive, definition);
+		var directive = new TemplaterDirective(definition, templater, view);
 		return directive;
 	}
 

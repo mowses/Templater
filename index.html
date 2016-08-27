@@ -38,13 +38,14 @@
 		<script src="./directives/repeat.directive.js"></script>
 		<script src="./directives/on-click.directive.js"></script>
 		<script src="./directives/on-mousedown.directive.js"></script>
+		<script src="./directives/my-element.directive.js"></script>
 		<script>
 			$(function() {
 				/*Templater.Config.customDirectives.push({
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/simple-repeater.html', function(view) {
+				Templater.loadView('templates/custom-element.html', function(view) {
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({

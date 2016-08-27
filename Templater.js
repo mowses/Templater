@@ -38,8 +38,7 @@
 
 			script = $('script#' + url_id);
 			if (script.length) {
-				templater = new Templater();
-				templater.setHtml(script.html());
+				templater = this.createFromHtml(script.html());
 				loaded_templates[url_id] = templater;
 				return Templater.loadView(url, callback);
 			}
@@ -50,6 +49,13 @@
 				delete loading_templates[url_id];
 				Templater.loadView(url, callback);
 			});
+		},
+
+		createFromHtml: function(html) {
+			var templater = new Templater();
+			templater.setHtml(html);
+
+			return templater;
 		},
 
 		// return all elements within $el (not include $el)

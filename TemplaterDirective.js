@@ -36,22 +36,54 @@
 		 * if its a directive like repeater
 		 * should return an array of generated views,
 		 */
-		getViews: function() {},
+		getViews: function() {
+			return this.definition.getViews();
+		},
 		/**
 		 * onInit method
-		 * implement it on your diretive definition
+		 * directive onInit now defined in this.definition.onInit
 		 */
-		onInit: function() {}
+		onInit: function() {
+			return this.definition.onInit();
+		}
 	});
 
-	function TemplaterDirective(templater, view) {
+	function TemplaterDirective(definition, templater, view) {
+		this.definition = definition;
+		// set definition.__proto__ otherwise, it wont recognize this keyword as being instance of TemplaterDirective
+		definition.__proto__ = this;
+
 		this.templater = templater;
 		this.view = view;
+		this.templateView;
 		constructor.apply(this, []);
 	}
 
 	function constructor() {
-		
+		var definition = this.definition;
+		var $element = this.view.$element;
+		var original_content;
+		var template_content_tag;
+
+		if (definition.template) {
+			this.templateView = Templater.createFromHtml(definition.template).generateView();
+			this.templateView.setParentView(this.view);
+			
+			original_content = $element.contents();  // this line before templateView render()
+			this.templateView.render($element);  // this line before find('content')
+			// use .find instead of $allElements.filter because directive template could have
+			// <content on-click=""></content>
+			// this gonna make wrapping placeholders out from <content> tag
+			template_content_tag = this.templateView.$element.filter('content');
+			template_content_tag = template_content_tag.length ? template_content_tag : this.templateView.$element.find('content');
+			
+			if (template_content_tag.length) {
+				template_content_tag.append(original_content);
+			} else {
+				original_content.remove();
+			}
+
+		}
 	}
 
 	function getAttributes(only_attrs) {
