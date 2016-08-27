@@ -58,7 +58,12 @@
 		var el = this.templater.dataBindings.$allElements[0];
 		var attrs = el.attributes;
 		var directive_name = this.name;
-		var databindings = this.templater.dataBindings.elementAttributes[0].attributes;
+		// possible not have databinding in elementAttributes, since it only register
+		// bindings that have '{{...}}'
+		var databindings = $.grep(this.templater.dataBindings.elementAttributes, function(attr) {
+			return attr.el === el;
+		})[0];
+		databindings = databindings ? databindings.attributes : {};
 		var mine_attributes = $.grep(attrs, function(attr) {
 			return (attr.nodeName.indexOf(directive_name + '-') === 0 || attr.nodeName === directive_name);
 		});
