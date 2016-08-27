@@ -26,6 +26,11 @@ cocoroni value: <b>{{cocoroni}}</b><br>
 
 <div repeat="{{repeater}}" on-click="clicked({{$index}});" on-mousedown="mousedown({{$value}})">
 	$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de div'}} nao é? {{cocoroni}} - {{$value}}
+	<hr>
+
+	<div repeat="[99,88,77]" on-click="clicked({{$index}});" on-mousedown="mousedown({{$value}})">
+		$index: {{$index}}. $key: {{$key}}. hahaha {{'dentro de repeater'}} nao é? {{cocoroni}} - {{$value}}
+	</div>
 </div>
 <!-- 
 div repeat="repeater" class="foo" style="background: {{styles.color}};">

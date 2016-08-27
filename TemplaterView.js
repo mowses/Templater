@@ -123,9 +123,7 @@
 			var directives = $.grep(instance.directives, function(item) {
 				return item.directive.definition.getViews;
 			}, true);
-			// will use scope_view when no repeatable area
-			// but will instantiate a new scope_view for every repeater, for every placeholder,
-			// so, quantity of scope_view = (1 * repeater) + 1
+			// no more baseView for repeater nor directive
 			var get_views;
 			var scope_view;
 			
@@ -136,7 +134,7 @@
 				// initialize directives for scope_view
 				$.each(directives, function(i, item) {
 					var directive = createDirectiveForDefinition(item.directive.definition, instance, scope_view);
-					directive.onInit(scope_view);
+					directive.onInit();
 				});
 
 			 	get_views = function() {
@@ -154,12 +152,14 @@
 
 					return function() {
 						var _views = [];
-						
+						// get the returned views
 						$.each(_repeatable_directives, function(i, directive) {
 							$.merge(_views, directive.getViews());
 						});
 
 						$.each(_views, function(i, view) {
+							// do these operations once
+							// and ony when adding for the first time to array
 							if ($.inArray(view, views) == -1) {
 								setParentView.apply(view, [self]);
 								// initialize directives
@@ -173,7 +173,7 @@
 
 						views.splice(_views.length, views.length);
 
-						return _views;
+						return views;
 					}
 				})();
 			}
