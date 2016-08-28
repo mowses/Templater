@@ -8,18 +8,17 @@
 	$.extend(TemplaterView, {
 		Config: {
 			dataBindingExpression: /({{([\s\S]*?)}})/gi
-		},
+		}/*,
 
 		generateID: function() {
 			let date = new Date();
 			return date.getTime();
-		}
+		}*/
 	});
 
 	function TemplaterView(templater_instance) {
 		var self = this;
 		this.__internal__ = {
-			id: null,
 			parentView: undefined,
 			templater: templater_instance
 		};
@@ -27,7 +26,6 @@
 		this.model = new ObserverCore();
 		this.events = new Events([
 			'changed model',
-			'parent changed model',
 			'render'
 		]);
 		this.$element;
@@ -58,18 +56,27 @@
 			return data;
 		},
 
+		refresh: function(refresh_subviews) {
+			var subviews = repeaterViews.apply(this, []);
+			doDataBindings.apply(this, []);
+
+			if (refresh_subviews) {
+				$.each(subviews, function(i, view) {
+					view.refresh(refresh_subviews);
+				});
+			}
+		},
+
 		render: function($element) {
-			//this.model.apply();
+			// apply model changes before trigger events render
+			// it prevent running doDataBindings twice
+			this.model.apply();
+
 			this.$element.appendTo($element);
 			this.events.trigger('render');
 		},
 
 		destroy: function() {
-			let parent = this.__internal__.parentView;
-			let id = this.__internal__.id;
-
-			parent.events.remove('changed model.for[' + id + ']');
-
 			this.$element.remove();
 		},
 
@@ -81,8 +88,6 @@
 		var templater_instance = this.__internal__.templater;
 		var selector = 'templater-placeholder#children-';
 		
-		this.__internal__.id = TemplaterView.generateID();
-
 		this.model.watch(null, function(data) {
 			self.events.trigger('changed model', data);
 		});
@@ -92,12 +97,11 @@
 			var timeout = new Timeout();
 
 			self.events
-			.on(['changed model.refresh-view', 'parent changed model'], timeout.wait(function() {
-				repeaterViews.apply(self, []);
-				doDataBindings.apply(self, []);
+			.on(['changed model.refresh-view'], timeout.wait(function() {
+				self.refresh(true);
 			}));
-			repeaterViews.apply(self, []);
-			doDataBindings.apply(self, []);
+
+			self.refresh();
 		});
 
 		// add container to html, otherwise it wont insert text blocks outside elements
@@ -194,12 +198,16 @@
 
 	function repeaterViews() {
 		var self = this;
+		var views = [];
 
 		$.each(this.placeholders, function(i, placeholder) {
 			$.each(placeholder.getChildViews(), function(i, view) {
+				views.push(view);
 				view.render(placeholder.$el);
 			});
 		});
+
+		return views;
 	}
 
 	function createDirectiveForDefinition(definition, templater, view) {
@@ -250,17 +258,8 @@
 
 	function setParentView(parent) {
 		if (!(parent instanceof TemplaterView)) return;
-		if (this.__internal__.parentView) return;  // cant change parent anymore
-
-		var self = this;
-		
-		function setProto() {
-			self.events.trigger('parent changed model');
-		}
 
 		this.__internal__.parentView = parent;
-		parent.events.on('changed model.for[' + this.__internal__.id + ']', setProto);
-		setProto();
 	}
 
 	
