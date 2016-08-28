@@ -6,7 +6,7 @@
 			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
 			var attributes = getAttributes.apply(this, [only_attrs]);
 			var result_attributes = {};
-			var data = $.extend({}, this.view.getData(), extra_data);
+			var data = $.extend(this.view.getData(), extra_data);
 
 			$.each(attributes, function(i, attr) {
 				var expression = attr.originalText;

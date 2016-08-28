@@ -47,6 +47,19 @@
 				});*/
 				Templater.loadView('templates/simple-repeater.html', function(view) {
 					var get_data = view.getData;
+					var controller = {};
+					$.extend(controller, {
+						clicked: $.proxy(function(param, $event) {
+							console.log('clicked event run. param:', param, $event);
+							$event.stopPropagation();
+						}, controller),
+
+						mousedown: $.proxy(function(param, $event) {
+							console.log('mousedown event run. param:', param, $event);
+							$event.stopPropagation();
+						}, controller)
+					});
+					
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({
@@ -60,17 +73,7 @@
 					});
 					view.getData = function() {
 						var data = get_data.apply(this, arguments);
-						data.__proto__ = {
-							clicked: function(param, $event) {
-								console.log('clicked event run. param:', param, $event);
-								$event.stopPropagation();
-							},
-
-							mousedown: function(param, $event) {
-								console.log('mousedown event run. param:', param, $event);
-								$event.stopPropagation();
-							}
-						};
+						data.__proto__ = controller;
 						return data;
 					}
 
