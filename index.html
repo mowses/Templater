@@ -46,6 +46,7 @@
 					'class': TextParserDirective
 				});*/
 				Templater.loadView('templates/simple-repeater.html', function(view) {
+					var get_data = view.getData;
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({
@@ -57,17 +58,22 @@
 							border: '2px solid black'
 						}
 					});
-					view.model.setProto({
-						clicked: function(param, $event) {
-							console.log('clicked event run. param:', param, $event);
-							$event.stopPropagation();
-						},
+					view.getData = function() {
+						var data = get_data.apply(this, arguments);
+						data.__proto__ = {
+							clicked: function(param, $event) {
+								console.log('clicked event run. param:', param, $event);
+								$event.stopPropagation();
+							},
 
-						mousedown: function(param, $event) {
-							console.log('mousedown event run. param:', param, $event);
-							$event.stopPropagation();
-						}
-					});
+							mousedown: function(param, $event) {
+								console.log('mousedown event run. param:', param, $event);
+								$event.stopPropagation();
+							}
+						};
+						return data;
+					}
+
 					view.model.apply();
 					view.render($('body'));
 				});

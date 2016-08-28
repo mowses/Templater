@@ -27,7 +27,7 @@
 		this.model = new ObserverCore();
 		this.events = new Events([
 			'changed model',
-			'changed model __proto__',
+			'parent changed model',
 			'render'
 		]);
 		this.$element;
@@ -44,6 +44,20 @@
 	}
 	
 	$.extend(TemplaterView.prototype, {
+		/**
+		 * return an object with data from this view
+		 * and all data from all of its parent views as __proto__
+		 */
+		getData: function() {
+			var self = this;
+			var data = $.extend({}, this.model.getData(false));
+			var parent_view = this.__internal__.parentView;
+
+			data.__proto__ = parent_view ? parent_view.getData() : undefined;
+
+			return data;
+		},
+
 		render: function($element) {
 			//this.model.apply();
 			this.$element.appendTo($element);
@@ -78,7 +92,7 @@
 			var timeout = new Timeout();
 
 			self.events
-			.on(['changed model.refresh-view', 'changed model __proto__'], timeout.wait(function() {
+			.on(['changed model.refresh-view', 'parent changed model'], timeout.wait(function() {
 				repeaterViews.apply(self, []);
 				doDataBindings.apply(self, []);
 			}));
@@ -195,7 +209,7 @@
 
 	function doDataBindings() {
 		var self = this;
-		var data = this.model.getData(false);
+		var data = this.getData();
 		var templater = this.__internal__.templater;
 		//var parent = self.__internal__.parentView;
 		
@@ -241,8 +255,7 @@
 		var self = this;
 		
 		function setProto() {
-			self.model.setProto(parent.model);
-			self.events.trigger('changed model __proto__');
+			self.events.trigger('parent changed model');
 		}
 
 		this.__internal__.parentView = parent;
