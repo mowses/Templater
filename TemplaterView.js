@@ -26,7 +26,8 @@
 		this.model = new ObserverCore();
 		this.events = new Events([
 			'changed model',
-			'render'
+			'render',
+			'refresh'
 		]);
 		this.$element;
 		this.placeholders = [];
@@ -65,6 +66,8 @@
 					view.refresh(refresh_subviews);
 				});
 			}
+
+			this.events.trigger('refresh');
 		},
 
 		render: function($element) {
