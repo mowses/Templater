@@ -75,6 +75,7 @@
 		this.html;
 		this.elementHtml;
 		this.directives;
+		this.placeholders = [];
 		this.dataBindings = {
 			$allElements: null,
 			textnodes: null,
@@ -89,6 +90,7 @@
 			parseTemplate.apply(this, []);
 			createPlaceholders.apply(this, []);
 			setDataBindingElements.apply(this, []);
+			setPlaceholders.apply(this, []);  // make sure this line run AFTER setDataBindingElements
 			initializeDataBindings.apply(this, []);
 		},
 
@@ -211,7 +213,14 @@
 		
 		// replace children templates html by html placeholders
 		$.each(this.__internal__.subtemplates, function(i, instance) {
-			html = html.replace(instance.html, '<templater-placeholder id="children-' + i + '"></templater-placeholder>');
+			let placeholder_start = 'start placeholder for subview-' + i;
+			let placeholder_end = 'end placeholder for subview-' + i;
+
+			self.placeholders.push({
+				start: placeholder_start,
+				end: placeholder_end
+			});
+			html = html.replace(instance.html, '<!--' + placeholder_start + '--><!--' + placeholder_end + '-->');
 		});
 
 		this.elementHtml = html;
@@ -224,6 +233,39 @@
 		this.dataBindings.$allElements = all_elements;
 		this.dataBindings.textnodes = filterTextNodesWithBind(all_elements);
 		this.dataBindings.elementAttributes = filterElementsAttributeValuesWithBind(all_elements);
+	}
+
+	function setPlaceholders() {
+		var self = this;
+		var all_elements = this.dataBindings.$allElements;
+		var placeholders = this.placeholders;
+		var comments = $.grep(all_elements, function(element) {
+			return element.nodeType == 8;
+		});
+
+		// make sure this.placeholders match the same indexes as templater.subviews
+		// ex: type in console:
+		// view.__internal__.templater.placeholders
+		// view.__internal__.templater.__internal__.subtemplates
+		// make sure placeholders start from 0 to n in sequence... its ## is the index of subtemplates
+		this.placeholders = $.map(placeholders, function(placeholder) {
+			var elements = {
+				start: null,
+				end: null
+			};
+
+			$.each(comments, function(i, el) {
+				if (el.nodeValue == placeholder.start) {
+					elements.start = el;
+					if (elements.end) return false;  // break loop
+				} else if (el.nodeValue == placeholder.end) {
+					elements.end = el;
+					if (elements.start) return false;  // break loop
+				}
+			});
+
+			return elements;
+		});
 	}
 
 	function filterTextNodesWithBind($elements) {

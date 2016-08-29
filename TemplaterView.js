@@ -70,12 +70,15 @@
 			this.events.trigger('refresh');
 		},
 
-		render: function($element) {
+		render: function($element, where) {
+			where = where ? where : 'append';
 			// apply model changes before trigger events render
 			// it prevent running doDataBindings twice
 			this.model.apply();
 
-			this.$element.appendTo($element);
+			// append or insert before or after
+			$element[where](this.$element);
+
 			this.events.trigger('render');
 		},
 
@@ -89,7 +92,6 @@
 	function initialize() {
 		var self = this;
 		var templater_instance = this.__internal__.templater;
-		var selector = 'templater-placeholder#children-';
 		
 		this.model.watch(null, function(data) {
 			self.events.trigger('changed model', data);
@@ -111,11 +113,104 @@
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
 		// make sure this.$element is inside a container before calling initializeDataBindings()
 		initializeDataBindings.apply(this, []);  // call this BEFORE (ANTES) this.$element.contents()
+		initializePlaceholders.apply(this, []);  // call this AFTER initializeDataBindings
 		
-		// store placeholders
+		// generate getChildViews for subtemplates
+		initializeGetChildViews.apply(this, []);
+
+		this.$element = this.$element.contents();
+	}
+
+	function Timeout() {
+		var timeout;
+		this.wait = function(fn) {
+			return function() {
+				clearTimeout(timeout);
+				timeout = setTimeout(fn);
+			}
+		}
+	}
+
+	function repeaterViews() {
+		var self = this;
+		var views = [];
+
+		$.each(this.placeholders, function(i, placeholder) {
+			$.each(placeholder.getChildViews(), function(i, view) {
+				views.push(view);
+				view.render(placeholder.$start, 'after');
+			});
+		});
+
+		return views;
+	}
+
+	function createDirectiveForDefinition(definition, templater, view) {
+		var directive = new TemplaterDirective(definition, templater, view);
+		return directive;
+	}
+
+	function doDataBindings() {
+		var self = this;
+		var data = this.getData();
+		var templater = this.__internal__.templater;
+		//var parent = self.__internal__.parentView;
+		
+		// textnodes
+		$.each(templater.dataBindings.textnodes, function(i, item) {
+			var result = item.originalText;
+			$.each(item.matches, function(i, match) {
+				result = result.replace(match[1], match.expression(data));
+			});
+			self.dataBindings.textnodes.get(i).nodeValue = result;
+		});
+
+		// element with attributes
+		$.each(templater.dataBindings.elementAttributes, function(i, item) {
+			$.each(item.attributes, function(attr_name, attr) {
+				var result = attr.originalText;
+				$.each(attr.matches, function(i, match) {
+					result = result.replace(match[1], match.expression(data));
+				});
+				self.dataBindings.elementAttributes.eq(i).attr(attr_name, result);
+			});
+		});
+	}
+
+	function initializeDataBindings() {
+		var self = this;
+		let templater = this.__internal__.templater;
+		
+		// $allElements MUST match its templater dataBindings.$allElements
+		this.dataBindings.$allElements = Templater.getAllElements(this.$element);
+		this.dataBindings.textnodes = $($.map(templater.dataBindings.textnodes, function(item) {
+			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
+		}));
+		this.dataBindings.elementAttributes = $($.map(templater.dataBindings.elementAttributes, function(item) {
+			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
+		}));
+	}
+
+	function initializePlaceholders() {
+		var self = this;
+		let templater = this.__internal__.templater;
+		let placeholders = $.map(templater.placeholders, function(placeholder) {
+			return {
+				$start: $(self.dataBindings.$allElements[templater.dataBindings.$allElements.index(placeholder.start)]),
+				$end: $(self.dataBindings.$allElements[templater.dataBindings.$allElements.index(placeholder.end)])
+			}
+		});
+
+		this.placeholders = placeholders;
+		return placeholders;
+	}
+
+	function initializeGetChildViews() {
+		var self = this;
+		var templater_instance = this.__internal__.templater;
+		var get_views_callbacks = [];
+		
 		$.each(templater_instance.__internal__.subtemplates, function(i, instance) {
-			let selector_id = selector + i;
-			let $placeholder = self.$element.find(selector_id);
 			let repeatable_directives = $.grep(instance.directives, function(item) {
 				return item.directive.definition.getViews;
 			});
@@ -180,83 +275,14 @@
 				})();
 			}
 
-			self.placeholders[i] = {
-				$el: $placeholder,
-				getChildViews: get_views
-			};
+			get_views_callbacks[i] = get_views;
 		});
 
-		this.$element = this.$element.contents();
-	}
-
-	function Timeout() {
-		var timeout;
-		this.wait = function(fn) {
-			return function() {
-				clearTimeout(timeout);
-				timeout = setTimeout(fn);
-			}
-		}
-	}
-
-	function repeaterViews() {
-		var self = this;
-		var views = [];
-
-		$.each(this.placeholders, function(i, placeholder) {
-			$.each(placeholder.getChildViews(), function(i, view) {
-				views.push(view);
-				view.render(placeholder.$el);
-			});
+		$.each(get_views_callbacks, function(i, callback) {
+			self.placeholders[i].getChildViews = callback;
 		});
 
-		return views;
-	}
-
-	function createDirectiveForDefinition(definition, templater, view) {
-		var directive = new TemplaterDirective(definition, templater, view);
-		return directive;
-	}
-
-	function doDataBindings() {
-		var self = this;
-		var data = this.getData();
-		var templater = this.__internal__.templater;
-		//var parent = self.__internal__.parentView;
-		
-		// textnodes
-		$.each(templater.dataBindings.textnodes, function(i, item) {
-			var result = item.originalText;
-			$.each(item.matches, function(i, match) {
-				result = result.replace(match[1], match.expression(data));
-			});
-			self.dataBindings.textnodes.get(i).nodeValue = result;
-		});
-
-		// element with attributes
-		$.each(templater.dataBindings.elementAttributes, function(i, item) {
-			$.each(item.attributes, function(attr_name, attr) {
-				var result = attr.originalText;
-				$.each(attr.matches, function(i, match) {
-					result = result.replace(match[1], match.expression(data));
-				});
-				self.dataBindings.elementAttributes.eq(i).attr(attr_name, result);
-			});
-		});
-	}
-
-	function initializeDataBindings() {
-		var self = this;
-		let templater = this.__internal__.templater;
-		
-		// $allElements MUST match its templater dataBindings.$allElements
-		this.dataBindings.$allElements = Templater.getAllElements(this.$element);
-		this.dataBindings.textnodes = $($.map(templater.dataBindings.textnodes, function(item) {
-			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
-		}));
-		this.dataBindings.elementAttributes = $($.map(templater.dataBindings.elementAttributes, function(item) {
-			return self.dataBindings.$allElements[templater.dataBindings.$allElements.index(item.el)];
-		}));
+		return get_views_callbacks;
 	}
 
 	function setParentView(parent) {
