@@ -44,7 +44,7 @@
 		var repeat_as_value = (repeat_as[1]||'').trim() || '$value';*/
 
 		$.each(params['repeat'], function($key, $value) {
-			let childviews = self.views;
+			let childviews = self._views;
 			// if by some reason you have changed these values, then
 			// next time you change parent model, will restore it
 			let data = {

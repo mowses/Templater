@@ -49,7 +49,7 @@
 	});
 
 	function TemplaterDirective(definition, templater, view) {
-		this.definition = definition;
+		this.definition = $.extend(true, {}, definition);
 		this.templater = templater;
 		this.view = view;
 		this.templateView;
