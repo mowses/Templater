@@ -37,14 +37,14 @@
 		 * should return an array of generated views,
 		 */
 		getViews: function() {
-			return this.definition.getViews.apply(this, []);
+			return this.definition.getViews();
 		},
 		/**
 		 * onInit method
 		 * directive onInit now defined in this.definition.onInit
 		 */
 		onInit: function() {
-			return this.definition.onInit.apply(this, []);
+			return this.definition.onInit();
 		}
 	});
 
@@ -81,6 +81,12 @@
 			}
 
 		}
+
+		$.extend(this.definition, {
+			view: this.view,
+			templater: this.templater,
+			parseAttributes: $.proxy(this.parseAttributes, this)
+		});
 	}
 
 	function getAttributes(only_attrs) {

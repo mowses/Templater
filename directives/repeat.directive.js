@@ -3,11 +3,13 @@
 
 	Templater.Directive.extend({
 		name: 'repeat',
+		_views: [],
 
 		getViews: function() {
 			var self = this;
-			this.views = create_or_update_views.apply(this, []);
-			return this.views;
+
+			this._views = create_or_update_views.apply(this, []);
+			return this._views;
 		}
 	});
 
@@ -16,14 +18,14 @@
 		var views = createOrUpdateViews.apply(self, []);
 		
 		// destroy old, no more used views
-		if (this.views) {
+		if (this._views) {
 			let len = views.length;
-			let t = this.views.length;
+			let t = this._views.length;
 
 			for (let i = len; i < t; i++) {
-				this.views[i].destroy();
+				this._views[i].destroy();
 			}
-			this.views.splice(len, t);
+			this._views.splice(len, t);
 		}
 		
 		return views;
