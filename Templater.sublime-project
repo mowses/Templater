@@ -1,0 +1,27 @@
+{
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"node_modules",
+				"dist"
+			],
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"Seti_ClosedFolder_same": true,
+		"Seti_SB_big": true,
+		"Seti_SB_orange": false,
+		"Seti_bold_slctdfile_labels": true,
+		"Seti_orange_button": true,
+		"Seti_orange_label": true,
+		"Seti_sb_small_padding": true,
+		"Seti_show_group_arrows": true,
+		"Seti_tabs_small": true,
+		"color_scheme": "Packages/Monokai Gray/MonokaiGray.tmTheme",
+		"theme": "Seti.sublime-theme"
+	}
+}
