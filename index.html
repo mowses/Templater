@@ -39,13 +39,15 @@
 		<script src="./directives/on-click.directive.js"></script>
 		<script src="./directives/on-mousedown.directive.js"></script>
 		<script src="./directives/my-element.directive.js"></script>
+		<script src="./directives/event-order.directive.js"></script>
+		<script src="./directives/my-component1/my-component1.directive.js"></script>
 		<script>
 			$(function() {
 				/*Templater.Config.customDirectives.push({
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/simple-repeater.html', function(view) {
+				Templater.loadView('templates/events-order.html', function(view) {
 					var get_data = view.getData;
 					var controller = {};
 					$.extend(controller, {

@@ -1,0 +1,68 @@
+<style>
+	div {
+		padding: 10px;
+		border: 1px solid black;
+	}
+
+	#div1 {
+		background: yellow;
+	}
+
+	#div2 {
+		background: gold;
+	}
+
+	#div3 {
+		background: orange;
+	}
+
+	li span {
+		color: green;
+	}
+
+	my-component1 {
+		border: 1px solid black;
+		padding: 10px;
+		display: block;
+		background: red;
+		margin-top: 10px;
+	}
+</style>
+
+<h1>Events order</h1>
+<p>
+	Watch the events execution order from views.<br />
+	I planned to run events this way:
+	<ol>
+		<li>
+			<b>onInit runs first</b><br />
+			Should run inner onInit first, then outer onInit. This way we can change model of inner views...
+		</li>
+		<li>
+			<b>onRender</b><br />
+			Should run inner onRender first, then outer.
+		</li>
+
+	</ol>
+	For DOM events:
+	<ol>
+		<li>
+			<b>trigger inner elements events first</b><br />
+			Then bubbling up the DOM tree. - <span>clicking on div3 should trigger: div3, div2 and div1</span>
+		</li>
+	</ol>
+</p>
+
+<div id="div1" on-click="console.log('clicked on #div1');" event-order>
+	DIV1
+
+	<div id="div2" on-click="console.log('clicked on #div2');" event-order>
+		DIV2
+
+		<div id="div3" on-click="console.log('clicked on #div3');" event-order>
+			DIV3
+		</div>
+	</div>
+</div>
+
+<my-component1>my-component1</my-component1>
