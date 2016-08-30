@@ -3,7 +3,7 @@
 
 	Templater.Directive.extend({
 		name: 'my-component1',
-		templateUrl: 'directives/my-component1',
+		pathForTemplate: 'directives/my-component1',
 
 		onInit: function() {
 			console.log('event onInit for my-component1');
