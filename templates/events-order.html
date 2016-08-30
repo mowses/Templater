@@ -20,12 +20,17 @@
 		color: green;
 	}
 
-	my-component1 {
+	my-component1,
+	my-component2 {
 		border: 1px solid black;
 		padding: 10px;
 		display: block;
 		background: red;
 		margin-top: 10px;
+	}
+
+	my-component2 {
+		background: green;
 	}
 </style>
 
@@ -65,4 +70,10 @@
 	</div>
 </div>
 
+<br /><br />
+Loading external template for my-component1
 <my-component1>my-component1</my-component1>
+
+<br /><br />
+Local template for my-component2
+<my-component2>my-component2</my-component2>
