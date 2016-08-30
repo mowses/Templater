@@ -30,8 +30,7 @@
 				//regex_lazy = new RegExp('<(' + selector.tag + ')[\\s]+[^>]*[\\s]*(' + selector.attribute + '[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*>([\\s\\S]*?)<\\/\\1>', 'gi');
 			} else if (!selector.tag && selector.attribute) {
 				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>([\\s\\S]*)<\\/\\1>', 'gi');
-				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>([\\s\\S]*?)<\\/\\1>', 'gi');
-				$.each(getMatches(html, regex_greedy, regex_lazy), function(i, m) {
+				$.each(getMatches(html, regex_greedy), function(i, m) {
 					matches.push([
 						m[0],  // html
 						m[1],  // tagname
@@ -115,10 +114,10 @@
 		}
 	});
 
-	function fixGreedyRegex(m, regex_lazy) {
+	function fixGreedyRegex(html, tag) {
 		// now, lets do some experimental workaround to fix regex greedy. for a description take a look the the first commit of this project at git
-		var fix_greedy_regex = new RegExp('<' + m[1] + '\\b[^>]*>(?:(?=([^<]+))\\1|<(?!' + m[1] + '\\b[^>]*>))*?<\\/' + m[1] + '>', 'gi');
-		var _html = m[0].substr(1);
+		var fix_greedy_regex = new RegExp('<' + tag + '\\b[^>]*>(?:(?=([^<]+))\\1|<(?!' + tag + '\\b[^>]*>))*?<\\/' + tag + '>', 'gi');
+		var _html = html.substr(1);
 		var _replaced = [];
 		var m2;
 
@@ -129,31 +128,33 @@
 		}
 
 		_html = '<' + _html;
-		regex_lazy.lastIndex = 0;  // reset regex lazy
-		m2 = regex_lazy.exec(_html);
-		if (!m2) return m;
+		fix_greedy_regex.lastIndex = 0;  // reset regex lazy
+		m2 = fix_greedy_regex.exec(_html);
+		if (!m2) return;
+		_html = m2[0];
 
 		// restore html content from replacement
-		$.each(m2, function(j) {
-			var m;
-			var regexp = new RegExp(/::TEMPLATER-REPLACED_TEXT::(\d)+::/, 'g');
-
-			while (m = regexp.exec(m2[j])) {
-				m2[j] = m2[j].replace(m[0], _replaced[m[1]]);
-				// reset regex internal index search
-				regexp.lastIndex = 0;
-			}
-		});
+		var regexp = new RegExp(/::TEMPLATER-REPLACED_TEXT::([\d]+)::/, 'g');
+		while (m2 = regexp.exec(_html)) {
+			_html = _html.replace(m2[0], _replaced[m2[1]]);
+			// reset regex internal index search
+			regexp.lastIndex = 0;
+		}
 		
-		return m2;
+		return _html;
 	}
 
-	function getMatches(html, regex_greedy, regex_lazy) {
+	function getMatches(html, regex_greedy) {
 		var m;
 		var matches = [];
+		var fixed_html;
 
 		while (m = regex_greedy.exec(html)) {
-			m = fixGreedyRegex(m, regex_lazy);
+			fixed_html = fixGreedyRegex(m[0], m[1]);
+			if (fixed_html) {
+				regex_greedy.lastIndex = 0;
+				m = regex_greedy.exec(fixed_html);
+			}
 			html = html.replace(m[0], '');
 			// reset regex internal index search
 			regex_greedy.lastIndex = 0;
