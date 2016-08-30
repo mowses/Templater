@@ -45,6 +45,12 @@
 		 */
 		onInit: function() {
 			return this.definition.onInit();
+		},
+
+		onRender: function() {
+			var onRender = this.definition.onRender;
+
+			return onRender && onRender.apply(this.definition, arguments);
 		}
 	});
 
@@ -57,6 +63,7 @@
 	}
 
 	function constructor() {
+		var self = this;
 		var definition = this.definition;
 		var $element = this.view.$element;
 		var original_content;
@@ -87,6 +94,8 @@
 			templater: this.templater,
 			parseAttributes: $.proxy(this.parseAttributes, this)
 		});
+
+		this.view.events.on('render', $.proxy(this.onRender, this));
 	}
 
 	function getAttributes(only_attrs) {
