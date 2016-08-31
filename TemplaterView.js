@@ -19,6 +19,7 @@
 	function TemplaterView(templater_instance) {
 		var self = this;
 		this.__internal__ = {
+			isRendered: false,
 			parentView: undefined,
 			templater: templater_instance
 		};
@@ -77,6 +78,10 @@
 			this.events.trigger('render');
 		},
 
+		isRendered: function() {
+			return this.__internal__.isRendered;
+		},
+
 		render: function($element, where, refresh) {
 			where = where ? where : 'append';
 			refresh = refresh === undefined ? true : refresh;
@@ -113,6 +118,8 @@
 		this.events
 		.once('render', function() {
 			var timeout = new Timeout();
+
+			self.__internal__.isRendered = true;
 
 			self.events
 			.on(['changed model.refresh-view'], timeout.wait(function() {

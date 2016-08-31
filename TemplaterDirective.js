@@ -71,6 +71,14 @@
 		} else if (definition.pathToTemplate) {
 			Templater.loadView(definition.pathToTemplate + '/template.html', function(view) {
 				prepareTemplateView.apply(self, [view]);
+				
+				// it could take a while to request the template file
+				// mean while, self.view could be already rendered
+				// causing to not rendering view into
+				// so now, we have to call manually the refresh() method
+				if (self.view.isRendered()) {
+					view.refresh(true);
+				}
 			});
 		}
 
