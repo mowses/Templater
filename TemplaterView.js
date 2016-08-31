@@ -110,7 +110,7 @@
 			self.events.trigger('changed model', data);
 		});
 		
-		/*this.events
+		this.events
 		.once('render', function() {
 			var timeout = new Timeout();
 
@@ -118,9 +118,7 @@
 			.on(['changed model.refresh-view'], timeout.wait(function() {
 				self.refresh(true);
 			}));
-
-			self.refresh();
-		});*/
+		});
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
