@@ -68,8 +68,8 @@
 		
 		if (definition.template) {
 			prepareTemplateView.apply(this, [Templater.createFromHtml(definition.template).generateView()]);
-		} else if (definition.pathForTemplate) {
-			Templater.loadView(definition.pathForTemplate + '/template.html', function(view) {
+		} else if (definition.pathToTemplate) {
+			Templater.loadView(definition.pathToTemplate + '/template.html', function(view) {
 				prepareTemplateView.apply(self, [view]);
 			});
 		}

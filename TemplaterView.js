@@ -65,7 +65,7 @@
 				});
 			}
 
-			// views can also have directives with template or pathForTemplate
+			// views can also have directives with template or pathToTemplate
 			// we stored all directives in view.directives property
 			$.each(this.directives, function(i, directive) {
 				var view = directive.templateView;
