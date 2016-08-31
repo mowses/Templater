@@ -26,13 +26,11 @@
 		this.model = new ObserverCore();
 		this.events = new Events([
 			'changed model',
-			'render',
-			'refresh'
+			'render'
 		]);
 		this.$element;
 		this.placeholders = [];
-		//this.directives;
-		this.childViews;
+		this.directives = [];
 		this.dataBindings = {
 			$allElements: null,
 			textnodes: null,
@@ -67,19 +65,34 @@
 				});
 			}
 
-			this.events.trigger('refresh');
+			// views can also have directives with template or pathForTemplate
+			// we stored all directives in view.directives property
+			$.each(this.directives, function(i, directive) {
+				var view = directive.templateView;
+				if (!view) return;
+
+				view.refresh(refresh_subviews);
+			});
+
+			this.events.trigger('render');
 		},
 
-		render: function($element, where) {
+		render: function($element, where, refresh) {
 			where = where ? where : 'append';
+			refresh = refresh === undefined ? true : refresh;
 			// apply model changes before trigger events render
 			// it prevent running doDataBindings twice
 			this.model.apply();
 
 			// append or insert before or after
 			$element[where](this.$element);
-
-			this.events.trigger('render');
+			// by default refresh should be true
+			// all internal calling to render() is and MUST BE refresh=false
+			// this way render method is executed in the correct order
+			// run events-order.html for more description
+			if (refresh) {
+				this.refresh(true);
+			}
 		},
 
 		destroy: function() {
@@ -97,7 +110,7 @@
 			self.events.trigger('changed model', data);
 		});
 		
-		this.events
+		/*this.events
 		.once('render', function() {
 			var timeout = new Timeout();
 
@@ -107,7 +120,7 @@
 			}));
 
 			self.refresh();
-		});
+		});*/
 
 		// add container to html, otherwise it wont insert text blocks outside elements
 		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
@@ -138,7 +151,7 @@
 		$.each(this.placeholders, function(i, placeholder) {
 			$.each(placeholder.getChildViews(), function(i, view) {
 				views.push(view);
-				view.render(placeholder.$start, 'after');
+				view.render(placeholder.$start, 'after', false);
 			});
 		});
 
@@ -230,6 +243,7 @@
 				// initialize directives for scope_view
 				$.each(directives, function(i, item) {
 					var directive = createDirectiveForDefinition(item.directive.definition, instance, scope_view);
+					scope_view.directives.push(directive);
 					directive.onInit();
 				});
 

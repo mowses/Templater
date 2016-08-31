@@ -58,7 +58,7 @@
 		this.definition = $.extend(true, {}, definition);
 		this.templater = templater;
 		this.view = view;
-		this.templateView;
+		this.templateView = null;
 		constructor.apply(this, []);
 	}
 
@@ -92,7 +92,7 @@
 		this.templateView.setParentView(this.view);
 		
 		original_content = $element.contents();  // this line before templateView render()
-		this.templateView.render($element);  // this line before find('content')
+		this.templateView.render($element, undefined, false);  // this line before find('content')
 		// use .find instead of $allElements.filter because directive template could have
 		// <content on-click=""></content>
 		// this gonna make wrapping placeholders out from <content> tag
