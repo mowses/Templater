@@ -149,7 +149,7 @@
 		$.each(this.placeholders, function(i, placeholder) {
 			$.each(placeholder.getChildViews(), function(i, view) {
 				views.push(view);
-				view.render(placeholder.$start, 'after', false);
+				view.render(placeholder.$end, 'before', false);
 			});
 		});
 
