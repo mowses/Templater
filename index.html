@@ -40,6 +40,7 @@
 		<script src="./directives/on-mousedown.directive.js"></script>
 		<script src="./directives/my-element.directive.js"></script>
 		<script src="./directives/event-order.directive.js"></script>
+		<script src="./directives/text-as-html.directive.js"></script>
 		<script src="./directives/my-component1/my-component1.directive.js"></script>
 		<script src="./directives/my-component2/my-component2.directive.js"></script>
 		<script>
@@ -48,7 +49,7 @@
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/events-order.html', function(view) {
+				Templater.loadView('templates/text-as-html.html', function(view) {
 					var get_data = view.getData;
 					var controller = {};
 					$.extend(controller, {
@@ -66,6 +67,8 @@
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({
+						textAsHtml: 'hello <b>world</b>...',
+						textAsHtml2: '<table border="2"><tr><th>Firstname</th><th>Lastname</th> <th>Age</th></tr><tr><td>Jill</td><td>Smith</td> <td>50</td></tr><tr><td>Eve</td><td>Jackson</td> <td>94</td></tr></table>',
 						cocoroni: 'macaaca la',
 						repeater: [2,3],
 						meca: 'the world is mine',
