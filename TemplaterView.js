@@ -8,17 +8,18 @@
 	$.extend(TemplaterView, {
 		Config: {
 			dataBindingExpression: /({{([\s\S]*?)}})/gi
-		}/*,
+		},
 
 		generateID: function() {
 			let date = new Date();
 			return date.getTime();
-		}*/
+		}
 	});
 
 	function TemplaterView(templater_instance) {
 		var self = this;
 		this.__internal__ = {
+			id: null,
 			isRendered: false,
 			parentView: undefined,
 			templater: templater_instance
@@ -27,7 +28,8 @@
 		this.model = new ObserverCore();
 		this.events = new Events([
 			'changed model',
-			'render'
+			'render',
+			'destroy'
 		]);
 		this.$element;
 		this.placeholders = [];
@@ -101,6 +103,9 @@
 		},
 
 		destroy: function() {
+			// child views listens for parent destroy event
+			this.events.trigger('destroy');
+			removeDestroyParentEventListener.apply(this, []);  // destroy my parent view destroy event listener
 			this.$element.remove();
 		},
 
@@ -110,6 +115,8 @@
 	function initialize() {
 		var self = this;
 		var templater_instance = this.__internal__.templater;
+
+		this.__internal__.id = TemplaterView.generateID();
 		
 		this.model.watch(null, function(data) {
 			self.events.trigger('changed model', data);
@@ -306,8 +313,26 @@
 
 	function setParentView(parent) {
 		if (!(parent instanceof TemplaterView)) return;
+		
+		var self = this;
+		var id = this.__internal__.id;
+
+		removeDestroyParentEventListener.apply(this, []);
+
+		parent.events.on('destroy.listening for child[' + id + ']', function() {
+			self.destroy();
+		});
 
 		this.__internal__.parentView = parent;
+	}
+
+	function removeDestroyParentEventListener() {
+		var parent = this.__internal__.parentView;
+		if (!parent) return;
+
+		var id = this.__internal__.id;
+
+		parent.events.remove('destroy.listening for child[' + id + ']');
 	}
 
 	
