@@ -139,8 +139,10 @@
 		
 		// the result array could repeat the same element depending on how many directives
 		// this element has. Lets change the result grouping the elements in a matrix
+		// I have tried grouping by item.html, but it wont work with two directive with same markup
+		// so now I am trying with index (character position of start tag on template)
 		var resulting_matrix = groupBy(template_directives, function(item) {
-			return [item.html];
+			return [item.index];
 		});
 
 		this.__internal__.subtemplates = [];

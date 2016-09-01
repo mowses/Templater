@@ -31,13 +31,14 @@
 			} else if (!selector.tag && selector.attribute) {
 				regex_greedy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>([\\s\\S]*)<\\/\\1>', 'gi');
 				$.each(getMatches(html, regex_greedy), function(i, m) {
-					matches.push([
-						m[0],  // html
-						m[1],  // tagname
-						selector.attribute,
-						m[11],  // attribute value
-						m[12]  // element content
-					]);
+					matches.push({
+						'0': m[0],  // html
+						'1': m[1],  // tagname
+						'2': selector.attribute,
+						'3': m[11],  // attribute value
+						'4': m[12],  // element content
+						'index': m.index
+					});
 				});
 
 				// now get matches for elements with no closing tags
@@ -50,13 +51,14 @@
 				// no need to call getMatches, instead we just capture each match
 				regex_lazy = new RegExp('<([a-zA-Z0-9_-]+)[^>]*[\\s]+(((' + selector.attribute + '))()[\\s]*|((' + selector.attribute + '))()[\\s]+[^>]*|((' + selector.attribute + ')[\\s]*=[\\s]*[\"\']([^\"\']*)[\"\'])[^>]*)>(?!([\\s\\S]*?)<\\/\\1>)', 'gi');
 				while (m = regex_lazy.exec(replaced_html)) {
-					matches.push([
-						m[0],  // html
-						m[1],  // tagname
-						selector.attribute,
-						m[11],  // attribute value
-						undefined  // element content
-					]);
+					matches.push({
+						'0': m[0],  // html
+						'1': m[1],  // tagname
+						'2': selector.attribute,
+						'3': m[11],  // attribute value
+						'4': undefined,  // element content
+						'index': m.index
+					});
 				}
 
 			} else if (selector.tag && !selector.attribute) {
@@ -74,7 +76,8 @@
 					attribute: item[2],
 					attributeValue: item[3],
 					content: item[4],
-					selector: selector_str
+					selector: selector_str,
+					index: item.index
 				};
 			});
 			
@@ -148,16 +151,18 @@
 		var m;
 		var matches = [];
 		var fixed_html;
+		var index;
 
 		while (m = regex_greedy.exec(html)) {
 			fixed_html = fixGreedyRegex(m[0], m[1]);
 			if (fixed_html) {
+				index = m.index;
 				regex_greedy.lastIndex = 0;
 				m = regex_greedy.exec(fixed_html);
+				m.index = index;
+				regex_greedy.lastIndex = index + m[0].length;
 			}
-			html = html.replace(m[0], '');
-			// reset regex internal index search
-			regex_greedy.lastIndex = 0;
+			
 			matches.push(m);
 		}
 
