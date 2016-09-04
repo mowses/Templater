@@ -230,7 +230,12 @@
 
 	function setDataBindingElements() {
 		var self = this;
-		var all_elements = Templater.getAllElements($('<div>' + this.elementHtml + '</div>'));
+		// always create the container first, then append to content inside it
+		// if you dont do this way, probably you will get bugs when inserting tables fragments like <tr>
+		// try this: $('<div><tr><td>hello</td></tr></div>') to see what happens
+		let $el = $('<div></div>');
+		$el.append(this.elementHtml);
+		var all_elements = Templater.getAllElements($el);
 
 		this.dataBindings.$allElements = all_elements;
 		this.dataBindings.textnodes = filterTextNodesWithBind(all_elements);

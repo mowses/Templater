@@ -135,7 +135,11 @@
 		});
 
 		// add container to html, otherwise it wont insert text blocks outside elements
-		this.$element = $('<div class="templater-view-container">' + templater_instance.elementHtml + '</div>');
+		this.$element = $('<div class="templater-view-container"></div>');
+		// always create the container first, then append to content inside it
+		// if you dont do this way, probably you will get bugs when inserting tables fragments like <tr>
+		// try this: $('<div><tr><td>hello</td></tr></div>') to see what happens
+		this.$element.append(templater_instance.elementHtml);
 		// make sure this.$element is inside a container before calling initializeDataBindings()
 		initializeDataBindings.apply(this, []);  // call this BEFORE (ANTES) this.$element.contents()
 		initializePlaceholders.apply(this, []);  // call this AFTER initializeDataBindings
