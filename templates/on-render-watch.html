@@ -2,12 +2,14 @@
 
 <p>run the code below and see if it triggers onRender of event-order.directive <br />
 I think it should not run, since we have not changed any property within the scope of any repeater.</p>
+<p style="color:red;">Until now, it still triggering its onRender...</p>
+<p>Another thing: Page selections should not be lost when refreshing view.</p>
 
 <pre>
 console.clear();
 view.model.setData('foo', Math.random());
 </pre>
 
-<div repeat="repeater">
-	<div id="index-{{$index}}" event-order>{{$index + ' - ' + $value}}</div>
+<div repeat="repeater" id="index-{{$index}}" event-order>
+	{{$index + ' - ' + $value}} - <b>none to be here</b> - {{cocoroni}}
 </div>

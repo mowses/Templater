@@ -64,6 +64,15 @@
 
 			if (refresh_subviews) {
 				$.each(subviews, function(i, view) {
+					// prevent running refresh twice
+					var refresh = true;
+					view.events.on('changed model.refresh-once', function() {
+						refresh = false;
+					});
+					view.model.apply();
+					view.events.remove('changed model.refresh-once');
+					if (!refresh) return;
+					
 					view.refresh(refresh_subviews);
 				});
 			}
@@ -167,6 +176,7 @@
 		$.each(this.placeholders, function(i, placeholder) {
 			$.each(placeholder.getChildViews(), function(i, view) {
 				views.push(view);
+				if (view.isRendered()) return;  // just to prevent lose page selection
 				view.render(placeholder.$end, 'before', false);
 			});
 		});
