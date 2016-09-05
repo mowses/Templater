@@ -26,6 +26,14 @@
 				border: 1px solid #599EA8;
 				margin: 10px 0px 10px 0px;
 			}
+
+			pre {
+				border: 1px solid grey;
+				background: #ededed;
+				padding: 5px;
+				font-family: monospace;
+				font-size: 11px;
+			}
 		</style>
 		<script src="./dependencies/jQuery/jquery-3.1.0.js"></script>
 		<script src="./dependencies/ObjDiff/ObjDiff.js"></script>
@@ -49,7 +57,7 @@
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/text-as-html.html', function(view) {
+				Templater.loadView('templates/on-render-watch.html', function(view) {
 					var get_data = view.getData;
 					var controller = {};
 					$.extend(controller, {

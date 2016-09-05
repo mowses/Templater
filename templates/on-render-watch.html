@@ -1,0 +1,13 @@
+<h1>OnRender test</h1>
+
+<p>run the code below and see if it triggers onRender of event-order.directive <br />
+I think it should not run, since we have not changed any property within the scope of any repeater.</p>
+
+<pre>
+console.clear();
+view.model.setData('foo', Math.random());
+</pre>
+
+<div repeat="repeater">
+	<div id="index-{{$index}}" event-order>{{$index + ' - ' + $value}}</div>
+</div>
