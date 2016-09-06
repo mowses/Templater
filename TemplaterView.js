@@ -64,16 +64,14 @@
 
 			if (refresh_subviews) {
 				$.each(subviews, function(i, view) {
-					// prevent running refresh twice
-					var refresh = true;
-					view.events.on('changed model.refresh-once', function() {
-						refresh = false;
-					});
-					view.model.apply();
-					view.events.remove('changed model.refresh-once');
-					if (!refresh) return;
-					
-					view.refresh(refresh_subviews);
+					// since trigger to event changed model.refresh-view have the timeout.wait
+					// it will execute refresh only once
+					// if calling refresh() directly it will run refresh twice
+					if (view.isRendered()) {
+						view.events.trigger('changed model.refresh-view');
+					} else {
+						view.refresh(true);
+					}
 				});
 			}
 
