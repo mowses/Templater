@@ -133,14 +133,12 @@
 		
 		this.events
 		.once('render', function() {
-			var timeout = new Timeout();
-
 			self.__internal__.isRendered = true;
 
 			self.events
-			.on(['changed model.refresh-view'], timeout.wait(function() {
+			.on(['changed model.refresh-view'], function() {
 				self.refresh(true);
-			}));
+			});
 		});
 
 		// add container to html, otherwise it wont insert text blocks outside elements
@@ -159,7 +157,7 @@
 		this.$element = this.$element.contents();
 	}
 
-	function Timeout() {
+	/*function Timeout() {
 		var timeout;
 		this.wait = function(fn) {
 			return function() {
@@ -167,7 +165,7 @@
 				timeout = setTimeout(fn);
 			}
 		}
-	}
+	}*/
 
 	function repeaterViews() {
 		var self = this;
