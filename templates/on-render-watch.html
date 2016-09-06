@@ -2,13 +2,19 @@
 
 <p>run the code below and see if it triggers onRender of event-order.directive <br />
 I think it should not run, since we have not changed any property within the scope of any repeater.</p>
-<p style="color:red;">Until now, it still triggering its onRender...</p>
-<p>Another thing: Page selections should not be lost when refreshing view.</p>
-
 <pre>
 console.clear();
 view.model.setData('foo', Math.random());
 </pre>
+
+<p style="color:red;">Until now, it still triggering its onRender...</p>
+<p>Another thing: Page selections should not be lost when refreshing view.</p>
+<p>Another thing 2: Refreshing should take in correctly order. For instance: changing repeater to another array, should cause each row to be refreshed/renderized. And this should be in order, like $index 0, 1, 2, 3, 4, and so on... this prevent flickering in render process because it would render a piece first, then in the next tick would render the second, and so on. Now it refreshes and renders all at same time and shows it at its finished state.</p>
+<pre>
+console.clear();
+view.model.setData('repeater', [2, 3, Math.random(), 5, 6]);
+</pre>
+
 
 <div repeat="repeater" id="index-{{$index}}" event-order>
 	{{$index + ' - ' + $value}} - <b>none to be here</b> - {{cocoroni}}
