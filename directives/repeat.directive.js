@@ -38,12 +38,17 @@
 		var views = [];
 		var templater = this.templater;
 		var $index = 0;
+		let repeater = params['repeat'];
 		// repeat-as attribute: $value,$key,$index
 		/*var repeat_as = (view_instance.$element.attr('repeat-as')||'').split(',');
 		var repeat_as_key = (repeat_as[0]||'').trim() || '$index';
 		var repeat_as_value = (repeat_as[1]||'').trim() || '$value';*/
 
-		$.each(params['repeat'], function($key, $value) {
+		if (typeof repeater != 'object' && !$.isArray(repeater)) {
+			repeater = [];
+		}
+
+		$.each(repeater, function($key, $value) {
 			let childviews = self._views;
 			// if by some reason you have changed these values, then
 			// next time you change parent model, will restore it
