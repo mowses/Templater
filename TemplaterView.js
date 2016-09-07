@@ -93,6 +93,17 @@
 			return this.__internal__.isRendered;
 		},
 
+		getParentViews: function() {
+			var views = [];
+			let parent_view = this.__internal__.parentView;
+
+			if (parent_view) {
+				views = $.merge([parent_view], parent_view.getParentViews());
+			}
+
+			return views;
+		},
+
 		render: function($element, where, refresh) {
 			where = where ? where : 'append';
 			refresh = refresh === undefined ? true : refresh;
