@@ -53,7 +53,9 @@
 				'$value': $value
 			};
 
-			let view = (childviews && childviews[$index]) || templater.generateView();
+			let view = (childviews && childviews[$index]) || templater.generateView({
+				parentView: self.view
+			});
 			view.model.extendData(data);
 
 			views.push(view);

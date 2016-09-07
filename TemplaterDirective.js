@@ -44,7 +44,9 @@
 		 * directive onInit now defined in this.definition.onInit
 		 */
 		onInit: function() {
-			return this.definition.onInit();
+			var onInit = this.definition.onInit;
+
+			return onInit && onInit.apply(this.definition, arguments);
 		},
 
 		onRender: function() {
@@ -67,9 +69,14 @@
 		var definition = this.definition;
 		
 		if (definition.template) {
-			prepareTemplateView.apply(this, [Templater.createFromHtml(definition.template).generateView()]);
+			prepareTemplateView.apply(this, [Templater.createFromHtml(definition.template).generateView({
+				parentView: this.view
+			})]);
 		} else if (definition.pathToTemplate) {
-			Templater.loadView(definition.pathToTemplate + '/template.html', function(view) {
+			Templater.loadView(definition.pathToTemplate + '/template.html', function(instance) {
+				var view = instance.generateView({
+					parentView: self.view
+				});
 				prepareTemplateView.apply(self, [view]);
 				
 				// it could take a while to request the template file
@@ -97,7 +104,6 @@
 		var template_content_tag;
 
 		this.templateView = view;
-		this.templateView.setParentView(this.view);
 		
 		original_content = $element.contents();  // this line before templateView render()
 		this.templateView.render($element, undefined, false);  // this line before find('content')

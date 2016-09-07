@@ -16,13 +16,13 @@
 		}
 	});
 
-	function TemplaterView(templater_instance) {
+	function TemplaterView(params) {
 		var self = this;
 		this.__internal__ = {
 			id: null,
 			isRendered: false,
-			parentView: undefined,
-			templater: templater_instance
+			parentView: params.parentView,
+			templater: params.templater
 		};
 		
 		this.model = new ObserverCore();
@@ -127,20 +127,26 @@
 			this.events.trigger('destroy');
 			removeDestroyParentEventListener.apply(this, []);  // destroy my parent view destroy event listener
 			this.$element.remove();
-		},
-
-		setParentView: setParentView
+		}
 	});
 
 	function initialize() {
 		var self = this;
 		var templater_instance = this.__internal__.templater;
+		var id = TemplaterView.generateID();
+		var parent = this.__internal__.parentView;
 
-		this.__internal__.id = TemplaterView.generateID();
+		this.__internal__.id = id;
 		
 		this.model.watch(null, function(data) {
 			self.events.trigger('changed model', data);
 		});
+
+		if (parent) {
+			parent.events.on('destroy.listening for child[' + id + ']', function() {
+				self.destroy();
+			});
+		}
 		
 		this.events
 		.once('render', function() {
@@ -272,8 +278,9 @@
 			
 			if (!repeatable_directives.length) {
 				// non repeatable
-				scope_view = instance.generateView();
-				scope_view.setParentView(self);
+				scope_view = instance.generateView({
+					parentView: self
+				});
 
 				// initialize directives for scope_view
 				$.each(directives, function(i, item) {
@@ -306,7 +313,6 @@
 							// do these operations once
 							// and only when adding for the first time to array
 							if ($.inArray(view, views) == -1) {
-								view.setParentView(self);
 								
 								// initialize all directives except the ones with getView method
 								$.each(directives, function(i, item) {
@@ -334,25 +340,8 @@
 		return get_views_callbacks;
 	}
 
-	function setParentView(parent) {
-		if (!(parent instanceof TemplaterView)) return;
-		
-		var self = this;
-		var id = this.__internal__.id;
-
-		removeDestroyParentEventListener.apply(this, []);
-
-		parent.events.on('destroy.listening for child[' + id + ']', function() {
-			self.destroy();
-		});
-
-		this.__internal__.parentView = parent;
-	}
-
 	function removeDestroyParentEventListener() {
 		var parent = this.__internal__.parentView;
-		if (!parent) return;
-
 		var id = this.__internal__.id;
 
 		parent.events.remove('destroy.listening for child[' + id + ']');

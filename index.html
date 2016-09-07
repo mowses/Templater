@@ -59,7 +59,10 @@
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/get-parent-views.html', function(view) {
+				Templater.loadView('templates/events-order.html', function(instance) {
+					var view = instance.generateView({
+
+					});
 					var get_data = view.getData;
 					var controller = {};
 					$.extend(controller, {

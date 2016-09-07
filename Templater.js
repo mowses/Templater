@@ -26,7 +26,7 @@
 			
 			if (loaded_templates[url_id]) {
 				//console.log('TEMPLATER INSTANCE:', loaded_templates[url_id]);
-				return callback(loaded_templates[url_id].generateView());
+				return callback(loaded_templates[url_id]);
 			}
 
 			if (loading_templates[url_id] !== undefined) {
@@ -100,8 +100,11 @@
 			this.__internal__.registered_directives = parent.__internal__.registered_directives;
 		},
 
-		generateView: function() {
-			var template_view = new TemplaterView(this);
+		generateView: function(params) {
+			$.extend(params, {
+				templater: this
+			});
+			var template_view = new TemplaterView(params);
 			return template_view;
 		},
 

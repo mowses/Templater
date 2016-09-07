@@ -15,8 +15,9 @@
 			var $element = this.view.$element;
 			var text = $element.text();
 			
-			this.myView = Templater.createFromHtml(text).generateView();
-			this.myView.setParentView(this.view);
+			this.myView = Templater.createFromHtml(text).generateView({
+				parentView: this.view
+			});
 			this.myView.render($element, 'replaceWith');
 		}
 
