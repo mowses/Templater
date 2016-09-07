@@ -45,14 +45,16 @@
 		 */
 		onInit: function() {
 			var onInit = this.definition.onInit;
+			if (!onInit) return;
 
-			return onInit && onInit.apply(this.definition, arguments);
+			return onInit.apply(this.definition, arguments);
 		},
 
 		onRender: function() {
 			var onRender = this.definition.onRender;
+			if (!onRender) return;
 
-			return onRender && onRender.apply(this.definition, arguments);
+			return onRender.apply(this.definition, arguments);
 		}
 	});
 
@@ -67,24 +69,52 @@
 	function constructor() {
 		var self = this;
 		var definition = this.definition;
+		var original_on_init = self.onInit;
+		var original_on_render = self.onRender;
+		var on_init_runs = false;
+		var on_render_runs = false;
 		
 		if (definition.template) {
 			prepareTemplateView.apply(this, [Templater.createFromHtml(definition.template).generateView({
 				parentView: this.view
 			})]);
 		} else if (definition.pathToTemplate) {
+			
+			// should not execute onInit until template is fully loaded
+			self.onInit = function() {
+				on_init_runs = true;
+			}
+			// should not execute onRender until template is fully loaded
+			self.onRender = function() {
+				on_render_runs = true;
+			}
+
 			Templater.loadView(definition.pathToTemplate + '/template.html', function(instance) {
+				//console.log('###### loaded template for', definition.pathToTemplate);
+				var parent_view = self.view;
 				var view = instance.generateView({
-					parentView: self.view
+					parentView: parent_view
 				});
 				prepareTemplateView.apply(self, [view]);
+
+				// restore onInit
+				self.onInit = original_on_init;
+				if (on_init_runs) {
+					self.onInit();
+				}
 				
 				// it could take a while to request the template file
 				// mean while, self.view could be already rendered
 				// causing to not rendering view into
 				// so now, we have to call manually the refresh() method
-				if (self.view.isRendered()) {
+				if (parent_view.isRendered()) {
 					view.refresh(true);
+				}
+
+				// restore onRender
+				self.onRender = original_on_render;
+				if (on_render_runs) {
+					self.onRender();
 				}
 			});
 		}
