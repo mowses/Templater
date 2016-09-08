@@ -50,6 +50,7 @@
 		<script src="./directives/event-order.directive.js"></script>
 		<script src="./directives/parent-view.directive.js"></script>
 		<script src="./directives/text-as-html.directive.js"></script>
+		<script src="./directives/model.directive.js"></script>
 		<script src="./directives/my-component1/my-component1.directive.js"></script>
 		<script src="./directives/my-component2/my-component2.directive.js"></script>
 		<script src="./directives/my-component3/my-component3.directive.js"></script>
@@ -59,7 +60,7 @@
 					selector: /({{([\s\S]*?)}})/,
 					'class': TextParserDirective
 				});*/
-				Templater.loadView('templates/get-parent-views.html', function(instance) {
+				Templater.loadView('templates/simple-repeater.html', function(instance) {
 					var view = instance.generateView({
 
 					});
