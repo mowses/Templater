@@ -1,4 +1,4 @@
-;(function($) {
+;(function($, ObserverCore) {
 	"use strict";
 
 	$.extend(TemplaterDirective.prototype, {
@@ -39,12 +39,16 @@
 		getViews: function() {
 			return this.definition.getViews();
 		},
+
 		/**
 		 * onInit method
 		 * directive onInit now defined in this.definition.onInit
 		 */
 		onInit: function() {
 			var onInit = this.definition.onInit;
+			
+			createTwoWayDataBindings.apply(this, []);
+
 			if (!onInit) return;
 
 			return onInit.apply(this.definition, arguments);
@@ -176,6 +180,61 @@
 		return mine_attributes;
 	}
 
+	/**
+	 * create and bind automatically data to directive attributes
+	 * define it in the directive definition like:
+	 * {
+	 * 		attributes: {
+	 * 			'attr-name-for-2way-databinding': {  // choose attribute name
+	 * 				twoWay: true
+	 * 			}
+	 * 		}
+	 * }
+	 *
+	 * and in the template markup write: <directive-name attr-name-for-2way-databinding="properties.of.object"></diretive-name>
+	 */
+	function createTwoWayDataBindings() {
+		var self = this;
+		var definition = this.definition;
+		var view = this.view;
+		var $element = view.$element;
+
+		// create two way databinding if were set like: attributes: {'directive atribute name': {twoWay: true}}
+		$.each(definition.attributes, function(attribute, params) {
+			if (params.twoWay !== true) return;
+
+			let attr = $element.attr(attribute);
+			let props = ObserverCore.utils.propToArray(attr);
+			let parent_views = $.merge([view], view.getParentViews());
+			let data = view.getData();
+			let proto_index = 0;
+			let view_with_property;
+
+			// know from which parent view data should be bound
+			while (!data.hasOwnProperty(props[0])) {
+				if (!data) break;
+				proto_index++;
+				data = data.__proto__;
+			}
+
+			view_with_property = parent_views[proto_index];
+
+			// do the two way data binding
+			// every time changes outside model, then update this scope model
+			// @TODO: (maybe have to do): maybe var value could be non object, so $.extend may fail...
+			view_with_property.model.watch(attr, function(data) {
+				let value = ObserverCore.utils.getProp(data.new, attr);
+				view.model.setData(attribute, $.extend(true, {}, value));
+			});
+			// every time changes the model in this scope, then update the outside model
+			view.model.watch(attribute, function(data) {
+				let value = ObserverCore.utils.getProp(data.new, attribute);
+				view_with_property.model.setData(attr, $.extend(true, {}, value));
+			});
+			
+		});
+	}
+
 	function prepare_expression(expression) {
 		var fn = new Function("obj",
 			"var e; " +
@@ -204,4 +263,4 @@
 
 	return TemplaterDirective;
 	
-})($);
+})($, ObserverCore);
