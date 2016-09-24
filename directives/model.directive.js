@@ -27,7 +27,12 @@
 			let data_view = this.getViewFromData();
 			let value = data_view.model.getData(attr);
 			
-			$element.val(value);
+			// in an input text type
+			// check if value is different than current value
+			// this prevents losing cursor position if focused on input
+			if ($element.val() != value) {
+				$element.val(value);
+			}
 		},
 
 		getValue: function() {
