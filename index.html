@@ -81,6 +81,7 @@
 					window.view = view;
 					console.log('loaded template and view is', view);
 					view.model.setData({
+						ownView: view,
 						textAsHtml: 'hello <b>world</b>...',
 						textAsHtml2: '<table border="2"><tr><th>Firstname</th><th>Lastname</th> <th>Age</th></tr><tr><td>Jill</td><td>Smith</td> <td>50</td></tr><tr><td>Eve</td><td>Jackson</td> <td>94</td></tr></table>',
 						cocoroni: 'macaaca la',
@@ -90,6 +91,9 @@
 							color: 'red',
 							border: '2px solid black'
 						}
+					});
+					view.model.watch(null, function(data) {
+						console.log(data);
 					});
 					view.getData = function() {
 						var data = get_data.apply(this, arguments);
