@@ -3,17 +3,24 @@
 
 	$.extend(TemplaterDirective.prototype, {
 		parseAttributes: function(only_attrs, extra_data) {
-			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
+			only_attrs = $.makeArray(only_attrs);
+			var self = this;
+			var el = this.templater.dataBindings.$allElements[0];
+			var databindings = $.grep(self.templater.dataBindings.elementAttributes, function(attr) {
+				return attr.el === el;
+			})[0];
+			databindings = databindings ? databindings.attributes : {};
 			var attributes = getAttributes.apply(this, [only_attrs]);
 			var result_attributes = {};
 			var data = $.extend(this.view.getData(), extra_data);
 
-			$.each(attributes, function(i, attr) {
-				var expression = attr.originalText;
+			$.each(attributes, function(attr_name, expression) {
 				// parse expressions on params
 				// we can bound both "{{varname}}" or just "varname"
 				// but if "varname" does not exist then it should be considered a string
-				$.each(attr.matches, function(i, item) {
+				
+				var databinding = databindings[attr_name] || {};
+				$.each(databinding.matches, function(i, item) {
 					var ret = item.expression(data);
 					expression = expression.replace(item[0], JSON.stringify(ret));
 				});
@@ -22,12 +29,12 @@
 					var run_expression = prepare_expression(expression);
 					var ret = run_expression(data);
 				} catch(err) {  // probably a raw string?
-					var ret = attr.originalText;
+					var ret = expression;
 				}
 				
-				result_attributes[attr.nodeName] = ret;
+				result_attributes[attr_name] = ret;
 			});
-			
+
 			return result_attributes;
 		},
 
@@ -45,9 +52,18 @@
 		 * directive onInit now defined in this.definition.onInit
 		 */
 		onInit: function() {
+			var _self = this;
 			var onInit = this.definition.onInit;
-			
-			createTwoWayDataBindings.apply(this, []);
+			var render = this.view.render;
+
+			// onInit may run before set any model value
+			// thats why I replaced render method
+			// createTwoWayDataBindings should run once and before component renders
+			this.view.render = function() {
+				createTwoWayDataBindings.apply(_self, []);
+				_self.view.render = render;  // restore render
+				return render.apply(this, arguments);
+			}
 
 			if (!onInit) return;
 
@@ -155,29 +171,16 @@
 	}
 
 	function getAttributes(only_attrs) {
-		var el = this.templater.dataBindings.$allElements[0];
-		var attrs = el.attributes;
-		var directive_name = this.definition.name;
-		// possible not have databinding in elementAttributes, since it only register
-		// bindings that have '{{...}}'
-		var databindings = $.grep(this.templater.dataBindings.elementAttributes, function(attr) {
-			return attr.el === el;
-		})[0];
-		databindings = databindings ? databindings.attributes : {};
-		var mine_attributes = $.grep(attrs, function(attr) {
-			return (attr.nodeName.indexOf(directive_name + '-') === 0 || attr.nodeName === directive_name);
-		});
-		
-		// add databindings vars into mine_attributes
-		mine_attributes = $.map(mine_attributes, function(item) {
-			if (only_attrs && $.inArray(item.nodeName, only_attrs) == -1) return;
-			return $.extend({
-				nodeName: item.nodeName,
-				originalText: item.nodeValue
-			}, databindings[item.nodeName]);
+		var ret = {};
+		var view = this.view;
+
+		$.each(view.$element[0].attributes, function(i, item) {
+			let _name = item.nodeName;
+			if ($.inArray(_name, only_attrs) == -1) return;
+			ret[_name] = item.value;
 		});
 
-		return mine_attributes;
+		return ret;
 	}
 
 	/**
@@ -192,6 +195,7 @@
 	 * }
 	 *
 	 * and in the template markup write: <directive-name attr-name-for-2way-databinding="properties.of.object"></diretive-name>
+	 * this bound to view.model to have the same key and its respective value
 	 */
 	function createTwoWayDataBindings() {
 		var self = this;
@@ -201,38 +205,73 @@
 
 		// create two way databinding if were set like: attributes: {'directive atribute name': {twoWay: true}}
 		$.each(definition.attributes, function(attribute, params) {
-			if (params.twoWay !== true) return;
+			let value;
 
-			let attr = $element.attr(attribute);
-			let props = ObserverCore.utils.propToArray(attr);
-			let parent_views = $.merge([view], view.getParentViews());
-			let data = view.getData();
-			let proto_index = 0;
-			let view_with_property;
+			switch(params.parseMethod) {
+				case 'literal':
+					value = $element.attr(attribute);
+					view.model.setData(attribute, value);
+					break;
 
-			// know from which parent view data should be bound
-			while (!data.hasOwnProperty(props[0])) {
-				if (!data) break;
-				proto_index++;
-				data = data.__proto__;
+				case 'twoWay':
+					let attr = $element.attr(attribute);
+					let view_with_property = getViewWithProperty.apply(self, [attr]);
+
+					value = self.parseAttributes(attribute)[attribute];
+					view.model.setData(attribute, clone(value));  // call .apply right now ???
+
+					// catch for errors
+					try {
+						// do the two way data binding
+						// every time changes outside model, then update this scope model
+						view_with_property.model.watch(attr, function(data) {
+							let value = ObserverCore.utils.getProp(data.new, attr);
+							view.model.setData(attribute, clone(value));
+						});
+						// every time changes the model in this scope, then update the outside model
+						view.model.watch(attribute, function(data) {
+							let value = ObserverCore.utils.getProp(data.new, attribute);
+							view_with_property.model.setData(attr, clone(value));
+						});
+					} catch(err) {
+						console.error('Cannot locate model from directive attribute: ' + attribute + '="' + attr + '".', err);
+					}
+
+					break;
+
+				default:
+					value = self.parseAttributes(attribute)[attribute];
+					view.model.setData(attribute, clone(value));  // call .apply right now ???
 			}
-
-			view_with_property = parent_views[proto_index];
-
-			// do the two way data binding
-			// every time changes outside model, then update this scope model
-			// @TODO: (maybe have to do): maybe var value could be non object, so $.extend may fail...
-			view_with_property.model.watch(attr, function(data) {
-				let value = ObserverCore.utils.getProp(data.new, attr);
-				view.model.setData(attribute, $.extend(true, {}, value));
-			});
-			// every time changes the model in this scope, then update the outside model
-			view.model.watch(attribute, function(data) {
-				let value = ObserverCore.utils.getProp(data.new, attribute);
-				view_with_property.model.setData(attr, $.extend(true, {}, value));
-			});
-			
 		});
+	}
+
+	function clone(value) {
+		if ($.isArray(value)) {
+			return $.merge([], value);
+		} else if ($.isPlainObject(value)) {
+			return $.extend(true, {}, value);
+		}
+		return value;
+	}
+
+	function getViewWithProperty(attr) {
+		var self = this;
+		var view = this.view;
+		
+		let props = ObserverCore.utils.propToArray(attr);
+		let parent_views = $.merge([view], view.getParentViews());
+		let data = view.getData();
+		let proto_index = 0;
+		
+		// know from which parent view data should be bound
+		while (!data.hasOwnProperty(props[0])) {
+			proto_index++;
+			data = data.__proto__;
+			if (!data) break;
+		}
+
+		return parent_views[proto_index];
 	}
 
 	function prepare_expression(expression) {

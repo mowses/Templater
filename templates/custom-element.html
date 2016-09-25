@@ -18,6 +18,7 @@
 		border: 1px solid black;
 		padding: 10px;
 		background: red;
+		display: block;
 	}
 
 	content {
@@ -25,8 +26,18 @@
 		background: yellow;
 		padding: 5px;
 	}
+
+	.withbg {
+		background: pink;
+	}
 </style>
 
 <h1>Custom element</h1>
 
-<my-element>this is <b>my-element</b> tag</my-element>
+<my-element class="myclass" border="styles.border" borderliteral="styles.border" border2way="styles.border" borderparsed="{{styles.border}}" borderparsedliteral="{{styles.border}}" borderparsed2way="{{styles.border}}">this is <b>my-element</b> tag which uses class <b>myclass</b> with border: <b class="withbg">{{styles.border}}</b></my-element>
+
+<br><br>
+<p>Try change the value:</p>
+<input type="text" model="styles.border" />
+
+<p>Intentional console error for directive attribute <b>borderparsed2way="\{\{styles.border\}\}"</b></p>
