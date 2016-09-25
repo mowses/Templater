@@ -3,24 +3,17 @@
 
 	$.extend(TemplaterDirective.prototype, {
 		parseAttributes: function(only_attrs, extra_data) {
-			only_attrs = $.makeArray(only_attrs);
-			var self = this;
-			var el = this.templater.dataBindings.$allElements[0];
-			var databindings = $.grep(self.templater.dataBindings.elementAttributes, function(attr) {
-				return attr.el === el;
-			})[0];
-			databindings = databindings ? databindings.attributes : {};
+			only_attrs = only_attrs ? $.makeArray(only_attrs) : undefined;
 			var attributes = getAttributes.apply(this, [only_attrs]);
 			var result_attributes = {};
 			var data = $.extend(this.view.getData(), extra_data);
 
-			$.each(attributes, function(attr_name, expression) {
+			$.each(attributes, function(i, attr) {
+				var expression = attr.originalText;
 				// parse expressions on params
 				// we can bound both "{{varname}}" or just "varname"
 				// but if "varname" does not exist then it should be considered a string
-				
-				var databinding = databindings[attr_name] || {};
-				$.each(databinding.matches, function(i, item) {
+				$.each(attr.matches, function(i, item) {
 					var ret = item.expression(data);
 					expression = expression.replace(item[0], JSON.stringify(ret));
 				});
@@ -29,12 +22,12 @@
 					var run_expression = prepare_expression(expression);
 					var ret = run_expression(data);
 				} catch(err) {  // probably a raw string?
-					var ret = expression;
+					var ret = attr.originalText;
 				}
 				
-				result_attributes[attr_name] = ret;
+				result_attributes[attr.nodeName] = ret;
 			});
-
+			
 			return result_attributes;
 		},
 
@@ -171,16 +164,25 @@
 	}
 
 	function getAttributes(only_attrs) {
-		var ret = {};
-		var view = this.view;
+		var el = this.templater.dataBindings.$allElements[0];
+		var attrs = el.attributes;
+		// possible not have databinding in elementAttributes, since it only register
+		// bindings that have '{{...}}'
+		var databindings = $.grep(this.templater.dataBindings.elementAttributes, function(attr) {
+			return attr.el === el;
+		})[0];
+		databindings = databindings ? databindings.attributes : {};
 
-		$.each(view.$element[0].attributes, function(i, item) {
-			let _name = item.nodeName;
-			if ($.inArray(_name, only_attrs) == -1) return;
-			ret[_name] = item.value;
+		// add databindings vars into mine_attributes
+		var mine_attributes = $.map(attrs, function(item) {
+			if (only_attrs && $.inArray(item.nodeName, only_attrs) == -1) return;
+			return $.extend({
+				nodeName: item.nodeName,
+				originalText: item.nodeValue
+			}, databindings[item.nodeName]);
 		});
 
-		return ret;
+		return mine_attributes;
 	}
 
 	/**
