@@ -189,7 +189,7 @@
 	 * {
 	 * 		attributes: {
 	 * 			'attr-name-for-2way-databinding': {  // choose attribute name
-	 * 				twoWay: true
+	 * 				parseMethod: 'twoWay' | 'literal'
 	 * 			}
 	 * 		}
 	 * }
