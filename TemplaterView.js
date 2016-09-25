@@ -41,10 +41,15 @@
 		var self = this;
 		this.__internal__ = {
 			id: null,
+			//allChildViews: [],
 			isRendered: false,
 			parentView: params.parentView,
 			templater: params.templater
 		};
+
+		/*if (params.parentView) {
+			params.parentView.__internal__.allChildViews.push(this);
+		}*/
 		
 		this.model = new ObserverCore();
 		this.events = new Events([
@@ -144,8 +149,15 @@
 		},
 
 		destroy: function() {
+			/*var parent_view = this.__internal__.parentView;
+			var child_view_index = parent_view ? $.inArray(this, parent_view.__internal__.allChildViews) : -1;*/
 			// child views listens for parent destroy event
 			this.events.trigger('destroy');
+			
+			/*// remove this instance from parent_view
+			if (child_view_index >= 0) {
+				parent_view.__internal__.allChildViews.splice(child_view_index, 1);
+			}*/
 			removeDestroyParentEventListener.apply(this, []);  // destroy my parent view destroy event listener
 			this.$element.remove();
 		}

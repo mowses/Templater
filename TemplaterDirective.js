@@ -113,6 +113,7 @@
 				var view = instance.generateView({
 					parentView: parent_view
 				});
+				parent_view.directives.push(self);  // experimental: added this to make view refresh child directives, when both repeat and directive shares same element
 				prepareTemplateView.apply(self, [view]);
 
 				// restore onInit
