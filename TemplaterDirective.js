@@ -52,10 +52,15 @@
 			// onInit may run before set any model value
 			// thats why I replaced render method
 			// createTwoWayDataBindings should run once and before component renders
-			this.view.render = function() {
+			
+			if (this.view.isRendered()) {
 				createTwoWayDataBindings.apply(_self, []);
-				_self.view.render = render;  // restore render
-				return render.apply(this, arguments);
+			} else {
+				this.view.render = function() {
+					createTwoWayDataBindings.apply(_self, []);
+					_self.view.render = render;  // restore render
+					return render.apply(this, arguments);
+				}
 			}
 
 			if (!onInit) return;
@@ -211,6 +216,7 @@
 
 			switch(params.parseMethod) {
 				case 'literal':
+					console.log('carry on from here. problem: when using urlToTemplate option then it would be rendered, causing .attr() to return a parsed value instead of literal');
 					value = $element.attr(attribute);
 					view.model.setData(attribute, value);
 					break;
