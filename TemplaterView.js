@@ -2,6 +2,27 @@
 	"use strict";
 
 	/**
+	 * extend jQuery functionality to retrieve Templater instance from any DOM element
+	 */
+	$.fn.extend({
+		getView: function() {
+			var instances = [];
+
+			$.each(this, function(i, item) {
+				var $el = $(this);
+				var instance = $el.data('template-view');
+				if (instance) {
+					instances.push(instance);
+				} else {
+					$.merge(instances, $el.parent().getView());
+				}
+			});
+
+			return $.unique(instances);
+		}
+	});
+
+	/**
 	 * a view for templates
 	 */
 	
@@ -172,6 +193,9 @@
 		initializeGetChildViews.apply(this, []);
 
 		this.$element = this.$element.contents();
+
+		// make view instance be acessible via $(element).getView()
+		this.$element.data('template-view', this);
 	}
 
 	/*function Timeout() {
