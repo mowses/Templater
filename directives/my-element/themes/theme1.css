@@ -1,0 +1,10 @@
+my-element {
+	border: 1px solid black;
+	padding: 10px;
+	background: red;
+	display: block;
+}
+
+.withbg {
+	background: pink;
+}

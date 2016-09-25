@@ -35,7 +35,10 @@
 		onInit: function() {
 			/*var self = this;
 			var view = this.view;*/
-			
+		},
+
+		onRender: function() {
+			console.log('this is the model', this.view.model.getData());
 		}
 	});
 
